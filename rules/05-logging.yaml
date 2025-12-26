@@ -1,0 +1,22 @@
+id: logging-structure
+severity: medium
+category: observability
+title: Logging without structure or correlation id
+
+description: >
+  Logs appear unstructured or lack correlation identifiers.
+
+why_it_matters:
+  - Incident analysis requires reconstructing request timelines.
+  - Plain text logs do not scale beyond trivial systems.
+  - Missing correlation ids make distributed tracing impossible.
+
+detect:
+  any_of:
+    - code_contains: console.log
+    - code_contains: println
+  none_of:
+    - correlation_id_detected: true
+    - structured_logging_detected: true
+
+confidence: medium

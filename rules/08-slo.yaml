@@ -1,0 +1,19 @@
+id: slo-definition
+severity: low
+category: reliability
+title: No SLO or error budget definition detected
+
+description: >
+  No explicit service-level objectives or error budgets were found.
+
+why_it_matters:
+  - Without SLOs, reliability decisions are arbitrary.
+  - Teams cannot balance feature velocity and stability.
+  - Incidents lack a clear success/failure definition.
+
+detect:
+  none_of:
+    - slo_config_detected: true
+    - error_budget_detected: true
+
+confidence: low

@@ -1,0 +1,19 @@
+id: versioned-artifacts
+severity: positive
+category: deployment
+title: Versioned artifacts detected
+
+description: >
+  Deployment artifacts appear to be explicitly versioned.
+
+why_it_matters:
+  - Enables fast and safe rollbacks.
+  - Improves traceability between code and runtime.
+  - Reduces configuration drift.
+
+detect:
+  any_of:
+    - artifact_tag: semantic
+    - image_tag: immutable
+
+confidence: high

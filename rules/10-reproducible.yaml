@@ -1,0 +1,19 @@
+id: reproducible-infra
+severity: positive
+category: infrastructure
+title: Infrastructure appears reproducible from scratch
+
+description: >
+  Infrastructure can likely be recreated from code alone.
+
+why_it_matters:
+  - Disaster recovery depends on reproducibility.
+  - Reduces hidden manual steps.
+  - Enables consistent environments.
+
+detect:
+  all_of:
+    - infra_as_code_detected: true
+    - manual_steps_documented: false
+
+confidence: medium

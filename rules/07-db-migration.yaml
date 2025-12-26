@@ -1,0 +1,21 @@
+id: db-migration-safety
+severity: low
+category: data
+title: No database migration safety detected
+
+description: >
+  Database migrations were detected without safety mechanisms.
+
+why_it_matters:
+  - Schema changes are often irreversible.
+  - Backward-incompatible migrations cause partial outages.
+  - Rollbacks rarely cover data changes.
+
+detect:
+  any_of:
+    - migration_tool_detected: true
+  none_of:
+    - backward_compatible_migration_hint: true
+    - migration_validation_step: true
+
+confidence: medium

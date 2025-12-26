@@ -1,0 +1,19 @@
+id: single-region
+severity: high
+category: reliability
+title: Single-region deployment detected
+
+description: >
+  Infrastructure configuration suggests the system is deployed in only one region.
+
+why_it_matters:
+  - Cloud regions fail more often than expected.
+  - Recovery from regional outages is slow without pre-existing setup.
+  - Single-region systems often fail enterprise availability requirements.
+
+detect:
+  all_of:
+    - infra_detected: true
+    - region_count: 1
+
+confidence: medium

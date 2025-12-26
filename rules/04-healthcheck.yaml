@@ -1,0 +1,20 @@
+id: healthcheck
+severity: medium
+category: operability
+title: No explicit health check contract detected
+
+description: >
+  No clear health or readiness endpoint was detected.
+
+why_it_matters:
+  - Orchestrators cannot distinguish dead from slow systems.
+  - Load balancers may route traffic to unhealthy instances.
+  - Debugging incidents becomes guesswork.
+
+detect:
+  none_of:
+    - http_endpoint: /health
+    - http_endpoint: /ready
+    - k8s_probe_defined: true
+
+confidence: high

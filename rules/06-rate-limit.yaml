@@ -1,0 +1,19 @@
+id: rate-limiting
+severity: medium
+category: security
+title: No rate limiting detected at ingress
+
+description: >
+  No evidence of rate limiting was found at the system boundary.
+
+why_it_matters:
+  - Most denial-of-service incidents come from valid traffic.
+  - Rate limiting protects both infrastructure and downstream systems.
+  - Absence increases blast radius of bugs and abuse.
+
+detect:
+  none_of:
+    - ingress_rate_limit: true
+    - api_gateway_rate_limit: true
+
+confidence: low

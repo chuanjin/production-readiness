@@ -1,0 +1,25 @@
+id: rollback-strategy
+severity: high
+category: deployment
+title: No rollback strategy detected
+
+description: >
+  No explicit rollback strategy was detected in deployment configuration.
+
+why_it_matters:
+  - Most incidents are resolved by rollback, not by hotfix.
+  - Hotfixes under pressure often introduce secondary failures.
+  - If rollback is slow or impossible, MTTR explodes.
+
+signals:
+  missing:
+    - versioned_artifacts
+    - deployment_strategy
+
+detect:
+  none_of:
+    - k8s_deployment_strategy: RollingUpdate
+    - ci_contains: rollback
+    - artifact_versioning: immutable
+
+confidence: medium
