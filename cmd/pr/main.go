@@ -1,3 +1,4 @@
+// cmd/pr/main.go
 package main
 
 import (
@@ -28,27 +29,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 1. Load rules
+	// Load rules
 	ruleSet, err := rules.LoadFromDir("rules")
 	if err != nil {
 		fmt.Println("Failed to load rules:", err)
 		os.Exit(1)
 	}
 
-	// 2. Scan repository
+	// Scan repository
 	signals, err := scanner.ScanRepo(absRoot)
 	if err != nil {
 		fmt.Println("Failed to scan repo:", err)
 		os.Exit(1)
 	}
 
-	// 3. Evaluate rules
-	findings := engine.Evaluate(ruleSet, signals)
+	// Evaluate rules  => returns engine.Summary (struct)
+	summary := engine.Evaluate(ruleSet, signals)
 
-	// 4. Summarize
-	summary := engine.Summarize(findings)
+	// Output Markdown (only one argument)
+	report := output.Markdown(summary)
 
-	// 5. Output (Markdown by default)
-	report := output.Markdown(summary, findings)
 	fmt.Println(report)
 }

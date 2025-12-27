@@ -1,7 +1,8 @@
 package engine
 
 import (
-  "strings"
+	"path/filepath"
+	"strings"
 
 	"github.com/chuanjin/production-readiness/internal/rules"
 	"github.com/chuanjin/production-readiness/internal/scanner"
@@ -10,6 +11,7 @@ import (
 type Finding struct {
 	Rule      rules.Rule
 	Triggered bool
+	Supported bool
 }
 
 type Summary struct {
@@ -17,69 +19,109 @@ type Summary struct {
 	Medium   int
 	Low      int
 	Positive int
-	Score    int
+
+	Findings []Finding
+	Skipped  []Finding
+	NotHit   []Finding
+
+	Score int
 }
 
-func Evaluate(ruleSet []rules.Rule, signals scanner.RepoSignals) []Finding {
+func Evaluate(ruleset []rules.Rule, signals scanner.RepoSignals) Summary {
 	var findings []Finding
-	for _, r := range ruleSet {
-		triggered := evaluateRule(r, signals)
-		findings = append(findings, Finding{
+
+	for _, r := range ruleset {
+		triggered, supported := evaluateRule(r, signals)
+		f := Finding{
 			Rule:      r,
 			Triggered: triggered,
-		})
-	}
-	return findings
-}
-
-func evaluateRule(rule rules.Rule, signals scanner.RepoSignals) bool {
-	for _, cond := range rule.Detect.AnyOf {
-		if matchCondition(cond, signals) {
-			return true
+			Supported: supported,
 		}
+		findings = append(findings, f)
 	}
-	return false
+
+	return Summarize(findings)
 }
 
-func matchCondition(cond map[string]interface{}, signals scanner.RepoSignals) bool {
-	for k, v := range cond {
-		switch k {
-		case "file_exists":
-			name := v.(string)
-			return signals.Files[name]
-		case "code_contains":
-			needle := v.(string)
-			for _, c := range signals.FileContent {
-				if strings.Contains(c, needle) {
-					return true
+// RETURNS (triggered, supported)
+func evaluateRule(rule rules.Rule, signals scanner.RepoSignals) (bool, bool) {
+	supported := false
+
+	conds := rule.Detect.AnyOf
+	if len(conds) == 0 {
+		return false, false
+	}
+
+	for _, cond := range conds {
+		// supported types
+		if cond["file_exists"] != nil || cond["code_contains"] != nil {
+			supported = true
+		}
+
+		// file_exists
+		if val, ok := cond["file_exists"]; ok {
+			expect := filepath.Clean(val.(string))
+
+			// check basename (example: "Dockerfile")
+			if _, exists := signals.Files[expect]; exists {
+				return true, true
+			}
+
+			// wildcard (example "*.yaml")
+			for file := range signals.Files {
+				match, _ := filepath.Match(expect, file)
+				if match {
+					return true, true
+				}
+			}
+		}
+
+		// code_contains
+		if val, ok := cond["code_contains"]; ok {
+			needle := val.(string)
+
+			for _, content := range signals.FileContent {
+				if strings.Contains(content, needle) {
+					return true, true
 				}
 			}
 		}
 	}
-	return false
+
+	return false, supported
 }
 
 func Summarize(findings []Finding) Summary {
-	var sum Summary
+	sum := Summary{}
+	sum.Findings = findings
+
 	for _, f := range findings {
-		if !f.Triggered {
+		if !f.Supported {
+			sum.Skipped = append(sum.Skipped, f)
 			continue
 		}
+
+		if !f.Triggered {
+			sum.NotHit = append(sum.NotHit, f)
+			continue
+		}
+
 		switch f.Rule.Severity {
-		case rules.High:
+		case "high":
 			sum.High++
-		case rules.Medium:
+		case "medium":
 			sum.Medium++
-		case rules.Low:
+		case "low":
 			sum.Low++
-		case rules.Positive:
+		default:
 			sum.Positive++
 		}
 	}
-	score := 100 - (sum.High*20 + sum.Medium*10 + sum.Low*5)
-	if score < 0 {
-		score = 0
+
+	sum.Score = 100 - (sum.High*20 + sum.Medium*10 + sum.Low*5)
+	if sum.Score < 0 {
+		sum.Score = 0
 	}
-	sum.Score = score
+
 	return sum
 }
