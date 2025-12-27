@@ -29,25 +29,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Load rules
+	// 1. Load rules
 	ruleSet, err := rules.LoadFromDir("rules")
 	if err != nil {
 		fmt.Println("Failed to load rules:", err)
 		os.Exit(1)
 	}
 
-	// Scan repository
-	signals, err := scanner.ScanRepo(absRoot)
+	// 2. Load .prignore (if exists)
+	skipList, err := scanner.LoadPrIgnore(absRoot)
+	if err != nil {
+		fmt.Println("Failed to load .prignore:", err)
+		os.Exit(1)
+	}
+
+	// 3. Scan repository
+	signals, err := scanner.ScanRepo(absRoot, skipList)
 	if err != nil {
 		fmt.Println("Failed to scan repo:", err)
 		os.Exit(1)
 	}
 
-	// Evaluate rules  => returns engine.Summary (struct)
+	// 4. Evaluate rules
 	summary := engine.Evaluate(ruleSet, signals)
 
-	// Output Markdown (only one argument)
+	// 5. Output (Markdown by default)
 	report := output.Markdown(summary)
-
 	fmt.Println(report)
 }

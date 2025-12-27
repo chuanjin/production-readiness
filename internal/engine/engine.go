@@ -52,6 +52,10 @@ var ConditionRegistry = map[string]ConditionFunc{
 		expected := value.(bool)
 		return signals.BoolSignals["structured_logging_detected"] == expected
 	},
+	"infra_as_code_detected": func(value interface{}, signals scanner.RepoSignals) bool {
+		expected := value.(bool)
+		return signals.BoolSignals["infra_as_code_detected"] == expected
+	},
 	// Add string signal check
 	"some_string_signal": func(value interface{}, signals scanner.RepoSignals) bool {
 		expected := value.(string)

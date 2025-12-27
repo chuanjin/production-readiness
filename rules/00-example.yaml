@@ -13,4 +13,5 @@ why_it_matters:
 detect:
   any_of:
     - file_exists: .env
+    - code_contains: process.env
 confidence: high

@@ -1,3 +1,3 @@
-go build -o prdrd cmd/pr/main.go
+go build -o pr cmd/pr/main.go
 
- ./prdrd scan .
+ ./pr scan .
