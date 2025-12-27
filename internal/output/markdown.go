@@ -17,8 +17,7 @@ func Markdown(summary engine.Summary) string {
 	for _, f := range summary.Findings {
 		// Skip rules that are unsupported
 		if !f.Supported {
-			b.WriteString(fmt.Sprintf("### ⚪ Skipped: %s\n", f.Rule.Title))
-			b.WriteString(f.Rule.Description + "\n\n")
+			b.WriteString(fmt.Sprintf("### ⚪ Skipped: %s\n\n", f.Rule.Title))
 			continue
 		}
 
@@ -38,15 +37,14 @@ func Markdown(summary engine.Summary) string {
 			}
 
 			b.WriteString(fmt.Sprintf("## %s — %s\n", emoji, f.Rule.Title))
-			b.WriteString(f.Rule.Description + "\n\n")
+			b.WriteString(f.Rule.Description + "\n")
 			for _, w := range f.Rule.Why {
 				b.WriteString("- " + w + "\n")
 			}
 			b.WriteString("\n")
 		} else {
 			// Supported but not triggered
-			b.WriteString(fmt.Sprintf("### 🟢 Passed: %s\n", f.Rule.Title))
-			b.WriteString(f.Rule.Description + "\n\n")
+			b.WriteString(fmt.Sprintf("### 🟢 Passed: %s - %s \n\n", f.Rule.Title, "NOT Triggered."))
 		}
 	}
 

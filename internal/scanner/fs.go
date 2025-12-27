@@ -1,26 +1,33 @@
 package scanner
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 type RepoSignals struct {
-	Files       map[string]bool   // filename → exists
-	FileContent map[string]string // full path → content
-	BoolSignals map[string]bool   // new signals, e.g., "secrets_provider_detected" → true/false
+	Files         map[string]bool
+	FileContent   map[string]string
+	BoolSignals   map[string]bool
+	StringSignals map[string]string
 }
 
 func ScanRepo(root string) (RepoSignals, error) {
 	signals := RepoSignals{
-		Files:       make(map[string]bool),
-		FileContent: make(map[string]string),
-		BoolSignals: make(map[string]bool),
+		Files:         make(map[string]bool),
+		FileContent:   make(map[string]string),
+		BoolSignals:   make(map[string]bool),
+		StringSignals: make(map[string]string),
 	}
 
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
+		if err != nil {
+			log.Printf("error accessing %s: %v", path, err)
+			return nil
+		}
+		if info.IsDir() {
 			return nil
 		}
 
@@ -36,15 +43,9 @@ func ScanRepo(root string) (RepoSignals, error) {
 				}
 			}
 		}
+
 		return nil
 	})
-
-	// Later to scan Terraform/Helm manifests or other configs.
-	signals.BoolSignals["secrets_provider_detected"] = false
-
-	// Later to detect imports or logging frameworks (e.g., logrus, zap, opentelemetry).
-	signals.BoolSignals["correlation_id_detected"] = false
-	signals.BoolSignals["structured_logging_detected"] = false
 
 	return signals, err
 }

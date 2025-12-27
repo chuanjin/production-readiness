@@ -1,0 +1,16 @@
+id: env-check
+severity: high
+category: security
+title: Env file detected
+
+description: >
+  A .env file exists, which might indicate secrets are stored in plaintext.
+
+why_it_matters:
+  - Plaintext env files are often checked into Git.
+  - This is risky for sensitive information.
+
+detect:
+  any_of:
+    - file_exists: .env
+confidence: high
