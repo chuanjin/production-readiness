@@ -50,9 +50,6 @@ func init() {
 		return false
 	}
 
-	// signal_equals:
-	//   signal_equals:
-	//     secrets_provider_detected: true
 	ConditionRegistry["signal_equals"] = func(value interface{}, signals scanner.RepoSignals) bool {
 		params := value.(map[string]interface{})
 		for key, expected := range params {
@@ -71,6 +68,13 @@ func init() {
 			if actual, ok := signals.IntSignals[key]; ok {
 				return actual == expected
 			}
+
+			// Signal doesn't exist - treat as false for bool, empty for string, 0 for int
+			if expectedBool, ok := expected.(bool); ok {
+				// If expecting false and signal doesn't exist, that's a match
+				return !expectedBool
+			}
+
 		}
 		return false
 	}
