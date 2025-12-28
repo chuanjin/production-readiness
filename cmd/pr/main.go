@@ -36,24 +36,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 2. Load .prignore (if exists)
-	skipList, err := scanner.LoadPrIgnore(absRoot)
-	if err != nil {
-		fmt.Println("Failed to load .prignore:", err)
-		os.Exit(1)
-	}
-
-	// 3. Scan repository
-	signals, err := scanner.ScanRepo(absRoot, skipList)
+	// 2. Scan repository
+	signals, err := scanner.ScanRepo(absRoot)
 	if err != nil {
 		fmt.Println("Failed to scan repo:", err)
 		os.Exit(1)
 	}
 
-	// 4. Evaluate rules
-	summary := engine.Evaluate(ruleSet, signals)
+	// 3. Evaluate rules
+	findings := engine.Evaluate(ruleSet, signals)
 
-	// 5. Output (Markdown by default)
-	report := output.Markdown(summary)
+	// 4. Summarize
+	summary := engine.Summarize(findings)
+
+	// 5. Output Markdown
+	report := output.Markdown(summary, findings)
 	fmt.Println(report)
 }

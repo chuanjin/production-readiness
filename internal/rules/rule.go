@@ -21,9 +21,7 @@ type Rule struct {
 }
 
 type Detect struct {
-	AnyOf  []Condition `yaml:"any_of"`
-	AllOf  []Condition `yaml:"all_of"`
-	NoneOf []Condition `yaml:"none_of"`
+	AllOf  []map[string]interface{} `yaml:"all_of"`
+	AnyOf  []map[string]interface{} `yaml:"any_of"`
+	NoneOf []map[string]interface{} `yaml:"none_of"`
 }
-
-type Condition map[string]interface{}

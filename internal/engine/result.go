@@ -2,51 +2,51 @@ package engine
 
 import "github.com/chuanjin/production-readiness/internal/rules"
 
+// Finding represents the result of a single rule evaluation
 type Finding struct {
 	Rule      rules.Rule
 	Triggered bool
-	Supported bool
 }
 
+// Summary aggregates findings and computes the score
 type Summary struct {
 	High     int
 	Medium   int
 	Low      int
 	Positive int
 	Score    int
-	Findings []Finding
 }
 
+// Summarize calculates counts and a simple readiness score
 func Summarize(findings []Finding) Summary {
-	summary := Summary{Findings: findings}
+	var s Summary
 
 	for _, f := range findings {
-		if !f.Supported {
+		if !f.Triggered {
 			continue
 		}
+
 		switch f.Rule.Severity {
 		case rules.High:
-			if f.Triggered {
-				summary.High++
-			}
+			s.High++
 		case rules.Medium:
-			if f.Triggered {
-				summary.Medium++
-			}
+			s.Medium++
 		case rules.Low:
-			if f.Triggered {
-				summary.Low++
-			}
+			s.Low++
 		case rules.Positive:
-			if f.Triggered {
-				summary.Positive++
-			}
+			s.Positive++
 		}
 	}
 
-	summary.Score = 100 - (summary.High*20 + summary.Medium*10 + summary.Low*5)
-	if summary.Score < 0 {
-		summary.Score = 0
+	// Simple scoring formula: 100 - (high*20 + medium*10 + low*5) + positive*5
+	// clamp to 0-100
+	score := 100 - (s.High*20 + s.Medium*10 + s.Low*5) + (s.Positive * 5)
+	if score < 0 {
+		score = 0
+	} else if score > 100 {
+		score = 100
 	}
-	return summary
+	s.Score = score
+
+	return s
 }

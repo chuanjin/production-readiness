@@ -1,22 +1,46 @@
 package engine
 
 import (
+	"path/filepath"
 	"strings"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/chuanjin/production-readiness/internal/rules"
 	"github.com/chuanjin/production-readiness/internal/scanner"
 )
 
-// ConditionFunc evaluates a single condition
+// ConditionFunc evaluates a condition
 type ConditionFunc func(value interface{}, signals scanner.RepoSignals) bool
 
-// ConditionRegistry holds all available condition handlers
-var ConditionRegistry = map[string]ConditionFunc{
-	"file_exists": func(value interface{}, signals scanner.RepoSignals) bool {
-		name := value.(string)
-		return signals.Files[name]
-	},
-	"code_contains": func(value interface{}, signals scanner.RepoSignals) bool {
+// ConditionRegistry holds all registered condition functions
+var ConditionRegistry = map[string]ConditionFunc{}
+
+func init() {
+	// ===== Built-in evaluators =====
+
+	// file_exists: ".env" OR "*.env" OR "**/*.yaml"
+	ConditionRegistry["file_exists"] = func(value interface{}, signals scanner.RepoSignals) bool {
+		pattern := value.(string)
+
+		// 1️⃣ basename exact match
+		for full := range signals.Files {
+			if filepath.Base(full) == pattern {
+				return true
+			}
+		}
+
+		// 2️⃣ glob match using doublestar across full repo paths
+		for full := range signals.Files {
+			match, _ := doublestar.Match(pattern, full)
+			if match {
+				return true
+			}
+		}
+		return false
+	}
+
+	// code_contains: "os.environ"
+	ConditionRegistry["code_contains"] = func(value interface{}, signals scanner.RepoSignals) bool {
 		needle := value.(string)
 		for _, content := range signals.FileContent {
 			if strings.Contains(content, needle) {
@@ -24,95 +48,86 @@ var ConditionRegistry = map[string]ConditionFunc{
 			}
 		}
 		return false
-	},
-	"secrets_provider_detected": func(value interface{}, signals scanner.RepoSignals) bool {
-		expected := value.(bool)
-		return signals.BoolSignals["secrets_provider_detected"] == expected
-	},
-	"correlation_id_detected": func(value interface{}, signals scanner.RepoSignals) bool {
-		expected := value.(bool)
-		return signals.BoolSignals["correlation_id_detected"] == expected
-	},
-	"structured_logging_detected": func(value interface{}, signals scanner.RepoSignals) bool {
-		expected := value.(bool)
-		return signals.BoolSignals["structured_logging_detected"] == expected
-	},
-	"infra_as_code_detected": func(value interface{}, signals scanner.RepoSignals) bool {
-		expected := value.(bool)
-		return signals.BoolSignals["infra_as_code_detected"] == expected
-	},
-	// Add string signal check
-	"some_string_signal": func(value interface{}, signals scanner.RepoSignals) bool {
-		expected := value.(string)
-		return signals.StringSignals["some_string_signal"] == expected
-	},
+	}
+
+	// signal_equals:
+	//   signal_equals:
+	//     secrets_provider_detected: true
+	ConditionRegistry["signal_equals"] = func(value interface{}, signals scanner.RepoSignals) bool {
+		params := value.(map[string]interface{})
+		for key, expected := range params {
+
+			// bool signal
+			if actual, ok := signals.BoolSignals[key]; ok {
+				return actual == expected
+			}
+
+			// string signal
+			if actual, ok := signals.StringSignals[key]; ok {
+				return actual == expected
+			}
+
+			// int signal
+			if actual, ok := signals.IntSignals[key]; ok {
+				return actual == expected
+			}
+		}
+		return false
+	}
 }
 
-// Evaluate all rules and return a summary
-func Evaluate(ruleSet []rules.Rule, signals scanner.RepoSignals) Summary {
+// Allow external dynamic registration
+func RegisterCondition(name string, fn ConditionFunc) {
+	ConditionRegistry[name] = fn
+}
+
+// ===== Condition Evaluation Core =====
+func evaluateCondition(raw interface{}, signals scanner.RepoSignals) bool {
+	switch cond := raw.(type) {
+	case map[string]interface{}:
+		for key, val := range cond {
+			if fn, ok := ConditionRegistry[key]; ok {
+				return fn(val, signals)
+			}
+		}
+		return false
+	default:
+		return false
+	}
+}
+
+// ===== Rule Execution =====
+
+func Evaluate(ruleSet []rules.Rule, signals scanner.RepoSignals) []Finding {
 	var findings []Finding
 	for _, r := range ruleSet {
-		triggered, supported := evaluateRule(r, signals)
+		triggered := evaluateRule(r, signals)
 		findings = append(findings, Finding{
 			Rule:      r,
 			Triggered: triggered,
-			Supported: supported,
 		})
 	}
-	return Summarize(findings)
+	return findings
 }
 
-func evaluateRule(rule rules.Rule, signals scanner.RepoSignals) (triggered bool, supported bool) {
-	supported = false
-	triggered = false
-
-	// Determine if rule is supported by checking if all its condition keys exist in registry
-	allKeys := append(append(rule.Detect.AnyOf, rule.Detect.AllOf...), rule.Detect.NoneOf...)
-	for _, cond := range allKeys {
-		for k := range cond {
-			if _, ok := ConditionRegistry[k]; ok {
-				supported = true
-			}
-		}
-	}
-
-	// Evaluate AnyOf
-	for _, cond := range rule.Detect.AnyOf {
-		if matchCondition(cond, signals) {
-			triggered = true
-			break
-		}
-	}
-
-	// Evaluate AllOf
-	for _, cond := range rule.Detect.AllOf {
-		if !matchCondition(cond, signals) {
-			triggered = false
-			break
-		}
-	}
-
-	// Evaluate NoneOf
+func evaluateRule(rule rules.Rule, signals scanner.RepoSignals) bool {
 	for _, cond := range rule.Detect.NoneOf {
-		if matchCondition(cond, signals) {
-			triggered = false
-			break
+		if evaluateCondition(cond, signals) {
+			return false
 		}
 	}
-
-	return triggered, supported
-}
-
-func matchCondition(cond map[string]interface{}, signals scanner.RepoSignals) bool {
-	for key, val := range cond {
-		if fn, ok := ConditionRegistry[key]; ok {
-			if fn(val, signals) {
+	for _, cond := range rule.Detect.AllOf {
+		if !evaluateCondition(cond, signals) {
+			return false
+		}
+	}
+	if len(rule.Detect.AnyOf) > 0 {
+		for _, cond := range rule.Detect.AnyOf {
+			if evaluateCondition(cond, signals) {
 				return true
 			}
-		} else {
-			// Unknown condition: treat as unsupported
-			continue
 		}
+		return false
 	}
-	return false
+	return true
 }

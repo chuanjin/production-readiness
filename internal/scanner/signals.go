@@ -6,4 +6,5 @@ type RepoSignals struct {
 	FileContent   map[string]string // scanned file content (code only)
 	BoolSignals   map[string]bool
 	StringSignals map[string]string
+	IntSignals    map[string]int
 }
