@@ -32,6 +32,14 @@ var binaryExts = map[string]bool{
 	".mp4": true, ".mp3": true, ".mov": true, ".exe": true,
 }
 
+// defaultIgnoredDirs — skipped always (low-level ignore, even if .prignore missing)
+var defaultIgnoredDirs = map[string]bool{
+	".git":         true,
+	".svn":         true,
+	".hg":          true,
+	"node_modules": true,
+}
+
 func ScanRepo(root string) (RepoSignals, error) {
 	signals := RepoSignals{
 		Files:         make(map[string]bool),
@@ -41,32 +49,45 @@ func ScanRepo(root string) (RepoSignals, error) {
 		IntSignals:    make(map[string]int),
 	}
 
-	ignorePaths := parsePrIgnore(root)
+	ignorePatterns := parsePrIgnore(root)
 
 	println("=== Ignore patterns ===")
-	for _, p := range ignorePaths {
+	for _, p := range ignorePatterns {
 		println("Pattern:", p)
 	}
 	println("")
 
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
+		if err != nil {
 			return nil
+		}
+
+		// Skip ignored folders before entering them
+		if info.IsDir() {
+			name := info.Name()
+			if defaultIgnoredDirs[name] {
+				return filepath.SkipDir
+			}
+			rel, _ := filepath.Rel(root, path)
+			if isIgnored(rel, ignorePatterns) {
+				return filepath.SkipDir
+			}
+			return nil // continue walking
 		}
 
 		relPath, _ := filepath.Rel(root, path)
 
 		println("Processing:", relPath)
 
+		// Always store to Files for existing check in engine
+		signals.Files[relPath] = true
+		println("  -> Added to Files map")
+
 		// Check if ignored BEFORE adding to Files
-		if isIgnored(relPath, ignorePaths) {
+		if isIgnored(relPath, ignorePatterns) {
 			println("  -> IGNORED by .prignore")
 			return nil
 		}
-
-		// Store the relative path
-		signals.Files[relPath] = true
-		println("  -> Added to Files map")
 
 		ext := strings.ToLower(filepath.Ext(path))
 
