@@ -13,7 +13,9 @@ why_it_matters:
 
 detect:
   none_of:
-    - slo_config_detected: true
-    - error_budget_detected: true
+    - signal_equals:
+        slo_config_detected: true
+    - signal_equals:
+        error_budget_detected: true
 
 confidence: low

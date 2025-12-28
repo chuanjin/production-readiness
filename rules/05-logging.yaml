@@ -16,7 +16,9 @@ detect:
     - code_contains: console.log
     - code_contains: println
   none_of:
-    - correlation_id_detected: true
-    - structured_logging_detected: true
+    - signal_equals:
+        correlation_id_detected: true
+    - signal_equals:
+        structured_logging_detected: true
 
 confidence: medium

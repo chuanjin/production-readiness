@@ -13,9 +13,12 @@ why_it_matters:
 
 detect:
   any_of:
-    - migration_tool_detected: true
+    - signal_equals:
+        migration_tool_detected: true
   none_of:
-    - backward_compatible_migration_hint: true
-    - migration_validation_step: true
+    - signal_equals:
+        backward_compatible_migration_hint: true
+    - signal_equals:
+        migration_validation_step: true
 
 confidence: medium

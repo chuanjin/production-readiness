@@ -13,8 +13,11 @@ why_it_matters:
 
 detect:
   none_of:
-    - http_endpoint: /health
-    - http_endpoint: /ready
-    - k8s_probe_defined: true
+    - signal_equals:
+        http_endpoint: /health
+    - signal_equals:
+        http_endpoint: /ready
+    - signal_equals:
+        k8s_probe_defined: true
 
 confidence: high

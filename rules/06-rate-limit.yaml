@@ -13,7 +13,9 @@ why_it_matters:
 
 detect:
   none_of:
-    - ingress_rate_limit: true
-    - api_gateway_rate_limit: true
+    - signal_equals:
+        ingress_rate_limit: true
+    - signal_equals:
+        api_gateway_rate_limit: true
 
 confidence: low

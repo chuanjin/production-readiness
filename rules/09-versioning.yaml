@@ -13,7 +13,9 @@ why_it_matters:
 
 detect:
   any_of:
-    - artifact_tag: semantic
-    - image_tag: immutable
+    - signal_equals:
+        artifact_tag: semantic
+    - signal_equals:
+        image_tag: immutable
 
 confidence: high

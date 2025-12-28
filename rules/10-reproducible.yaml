@@ -1,10 +1,10 @@
-id: reproducible-infra
-severity: positive
+id: non-reproducible-infra
+severity: medium
 category: infrastructure
-title: Infrastructure appears reproducible from scratch
+title: Infrastructure appears not reproducible from code
 
 description: >
-  Infrastructure can likely be recreated from code alone.
+  Infrastructure cannot likely be recreated from code.
 
 why_it_matters:
   - Disaster recovery depends on reproducibility.
@@ -13,7 +13,9 @@ why_it_matters:
 
 detect:
   all_of:
-    - infra_as_code_detected: true
-    - manual_steps_documented: false
+    - signal_equals:
+        infra_as_code_detected: false
+    - signal_equals:
+        manual_steps_documented: true
 
 confidence: medium

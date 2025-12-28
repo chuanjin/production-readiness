@@ -13,7 +13,9 @@ why_it_matters:
 
 detect:
   all_of:
-    - infra_detected: true
-    - region_count: 1
+    - signal_equals:
+        infra_as_code_detected: true
+    - signal_equals:
+        region_count: 1
 
 confidence: medium
