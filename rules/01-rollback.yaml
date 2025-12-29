@@ -14,7 +14,7 @@ detect:
         k8s_deployment_strategy: RollingUpdate
     - code_contains: rollback
     - signal_equals:
-        artifact_versioning: immutable
+        versioned_artifacts: true
     - code_contains: "docker tag"
     - code_contains: "git tag"
     - file_exists: "**/*deployment*.yaml"

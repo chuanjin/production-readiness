@@ -1,10 +1,10 @@
 id: versioned-artifacts
-severity: positive
+severity: low
 category: deployment
-title: Versioned artifacts detected
+title: Versioned artifacts not detected
 
 description: >
-  Deployment artifacts appear to be explicitly versioned.
+  Deployment artifacts appear not to be explicitly versioned.
 
 why_it_matters:
   - Enables fast and safe rollbacks.
@@ -12,10 +12,8 @@ why_it_matters:
   - Reduces configuration drift.
 
 detect:
-  any_of:
+  none_of:
     - signal_equals:
-        artifact_tag: semantic
-    - signal_equals:
-        image_tag: immutable
+        versioned_artifacts: true
 
 confidence: high

@@ -81,33 +81,47 @@ func detectK8sDeploymentStrategy(content string, relPath string, signals *RepoSi
 	}
 }
 
-// detectArtifactVersioning checks for immutable artifact versioning patterns
+// detectArtifactVersioning checks for versioned artifact patterns
 func detectArtifactVersioning(content string, relPath string, signals *RepoSignals) {
-	if signals.StringSignals["artifact_versioning"] != "" {
+	if signals.BoolSignals["versioned_artifacts"] {
 		return
 	}
 
 	contentLower := strings.ToLower(content)
 
-	immutablePatterns := []string{
-		"image:",
-		"docker push",
-		"docker tag",
-		"git tag",
-		"github.ref",
-		"version:",
-		"semver",
-		"gcr.io",
-		"ecr.aws",
-		"registry.hub.docker.com",
+	// Check for mutable tags first (anti-pattern)
+	mutableTags := []string{":latest", ":main", ":master", ":dev", ":develop"}
+	for _, tag := range mutableTags {
+		if strings.Contains(contentLower, tag) {
+			// Found mutable tag - not versioned
+			return
+		}
 	}
 
-	for _, pattern := range immutablePatterns {
+	// Look for versioning patterns
+	versioningPatterns := []string{
+		// Semantic versioning
+		":v1", ":v2", "version:", "tag:",
+
+		// Git tags
+		"git tag", "github.ref", "git.tag",
+
+		// Semantic versioning tools
+		"semver", "semantic-release",
+
+		// Docker image versioning
+		"@sha256:", "sha-", ":build-", ":release-",
+
+		// Container registries with versions
+		"gcr.io", "ecr.aws", "quay.io", "ghcr.io",
+
+		// Version variables
+		"$version", "${version}", "{{version}}",
+	}
+
+	for _, pattern := range versioningPatterns {
 		if strings.Contains(contentLower, pattern) {
-			if strings.Contains(contentLower, ":latest") {
-				continue
-			}
-			signals.StringSignals["artifact_versioning"] = "immutable"
+			signals.BoolSignals["versioned_artifacts"] = true
 			return
 		}
 	}
