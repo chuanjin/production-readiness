@@ -8,23 +8,6 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 )
 
-var allowedCodeExts = map[string]bool{
-	// existing code files
-	".go": true, ".ts": true, ".js": true, ".jsx": true, ".tsx": true,
-	".py": true, ".rb": true, ".java": true, ".kt": true, ".swift": true,
-	".c": true, ".cpp": true, ".h": true, ".rs": true, ".php": true,
-	".sh": true, ".bash": true, ".zsh": true, ".tf": true, ".dockerfile": true,
-	".sql": true, ".gradle": true, ".makefile": true,
-	"": true, // extensionless like Dockerfile / Makefile
-
-	// Add config files
-	".env":  true,               // environment variables
-	".yaml": true, ".yml": true, // k8s / helm / config
-	".json": true, // package.json, deployment config
-	".toml": true, // configs like pyproject.toml
-	".ini":  true, // generic config
-}
-
 // binaryExts are automatically skipped
 var binaryExts = map[string]bool{
 	".png": true, ".jpg": true, ".jpeg": true, ".gif": true,
@@ -96,16 +79,24 @@ func ScanRepo(root string) (RepoSignals, error) {
 			return nil
 		}
 
-		if !allowedCodeExts[ext] && !allowedCodeExts[info.Name()] {
-			println("  -> Skipped (not allowed extension)")
-			return nil
-		}
-
 		if info.Size() < 200_000 {
 			data, err := os.ReadFile(path)
 			if err == nil && isText(string(data)) {
-				signals.FileContent[relPath] = string(data)
+				content := string(data)
+				signals.FileContent[relPath] = content
 				println("  -> Added to FileContent")
+
+				// Run all detectors
+				detectSecretsProvider(content, &signals)
+				detectInfrastructure(content, &signals)
+				detectRegions(content, &signals)
+				detectManualSteps(content, relPath, &signals)
+				detectArtifactVersioning(content, &signals)
+
+				if ext == ".yaml" || ext == ".yml" {
+					detectK8sDeploymentStrategy(content, &signals)
+				}
+
 			}
 		} else {
 			println("  -> Skipped (too large)")
