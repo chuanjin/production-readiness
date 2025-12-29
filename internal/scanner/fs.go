@@ -86,17 +86,8 @@ func ScanRepo(root string) (RepoSignals, error) {
 				signals.FileContent[relPath] = content
 				println("  -> Added to FileContent")
 
-				// Run all detectors
-				detectSecretsProvider(content, &signals)
-				detectInfrastructure(content, &signals)
-				detectRegions(content, &signals)
-				detectManualSteps(content, relPath, &signals)
-				detectArtifactVersioning(content, &signals)
-
-				if ext == ".yaml" || ext == ".yml" {
-					detectK8sDeploymentStrategy(content, &signals)
-				}
-
+				// Run all detectors dynamically
+				runAllDetectors(content, relPath, &signals)
 			}
 		} else {
 			println("  -> Skipped (too large)")

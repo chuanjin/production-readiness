@@ -1,13 +1,14 @@
 package scanner
 
 import (
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
 // detectSecretsProvider checks if code uses secrets management services
-func detectSecretsProvider(content string, signals *RepoSignals) {
+func detectSecretsProvider(content string, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["secrets_provider_detected"] {
 		return
 	}
@@ -50,8 +51,14 @@ func detectSecretsProvider(content string, signals *RepoSignals) {
 }
 
 // detectK8sDeploymentStrategy checks Kubernetes deployment files for strategy
-func detectK8sDeploymentStrategy(content string, signals *RepoSignals) {
+func detectK8sDeploymentStrategy(content string, relPath string, signals *RepoSignals) {
 	if signals.StringSignals["k8s_deployment_strategy"] != "" {
+		return
+	}
+
+	// Only check YAML files
+	ext := strings.ToLower(filepath.Ext(relPath))
+	if ext != ".yaml" && ext != ".yml" {
 		return
 	}
 
@@ -75,7 +82,7 @@ func detectK8sDeploymentStrategy(content string, signals *RepoSignals) {
 }
 
 // detectArtifactVersioning checks for immutable artifact versioning patterns
-func detectArtifactVersioning(content string, signals *RepoSignals) {
+func detectArtifactVersioning(content string, relPath string, signals *RepoSignals) {
 	if signals.StringSignals["artifact_versioning"] != "" {
 		return
 	}
@@ -107,7 +114,7 @@ func detectArtifactVersioning(content string, signals *RepoSignals) {
 }
 
 // detectInfrastructure checks if IaC (Infrastructure as Code) is present
-func detectInfrastructure(content string, signals *RepoSignals) {
+func detectInfrastructure(content string, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["infra_as_code_detected"] {
 		return
 	}
@@ -143,7 +150,7 @@ func detectInfrastructure(content string, signals *RepoSignals) {
 }
 
 // detectRegions counts the number of unique cloud regions configured
-func detectRegions(content string, signals *RepoSignals) {
+func detectRegions(content string, relPath string, signals *RepoSignals) {
 	regions := make(map[string]bool)
 
 	contentLower := strings.ToLower(content)
