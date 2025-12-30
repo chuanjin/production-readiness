@@ -7,6 +7,28 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func init() {
+	// Auto-register all detectors
+	// Add new detectors here - just one line per detector!
+	registerDetector(detectSecretsProvider)
+	registerDetector(detectInfrastructure)
+	registerDetector(detectRegions)
+	registerDetector(detectManualSteps)
+	registerDetector(detectK8sDeploymentStrategy)
+	registerDetector(detectArtifactVersioning)
+	registerDetector(detectHealthEndpoints)
+	registerDetector(detectK8sProbes)
+	registerDetector(detectCorrelationId)
+	registerDetector(detectStructuredLogging)
+	registerDetector(detectIngressRateLimit)
+	registerDetector(detectAPIGatewayRateLimit)
+	registerDetector(detectSLOConfig)
+	registerDetector(detectErrorBudget)
+	registerDetector(detectMigrationTool)
+	registerDetector(detectBackwardCompatibleMigration)
+	registerDetector(detectMigrationValidation)
+}
+
 // detectSecretsProvider checks if code uses secrets management services
 func detectSecretsProvider(content string, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["secrets_provider_detected"] {
@@ -473,7 +495,7 @@ func detectStructuredLogging(content string, relPath string, signals *RepoSignal
 
 	// Single strong indicator is enough
 	strongIndicators := []string{
-		"structlog", "logrus", "zerolog", "slog",
+		"structlog", "logrus", "zerolog", "slog", "zap",
 		"winston", "pino", "bunyan",
 		"serilog", "ecs-logging",
 	}
@@ -902,7 +924,9 @@ func detectBackwardCompatibleMigration(content string, relPath string, signals *
 
 		// Safe migration practices
 		"nullable", "null: true", "default:", "default value",
-		"add column.*default", "add column.*null",
+		// We treat these as weaker indicators that must appear in combination
+		// (e.g. ADD COLUMN + NULL/DEFAULT) to avoid false positives.
+		"add column", "null", "default",
 
 		// Incremental changes
 		"incremental migration", "phased migration",
@@ -955,9 +979,10 @@ func detectMigrationValidation(content string, relPath string, signals *RepoSign
 
 		// Migration testing
 		"migration test", "test:migration", "migration_test",
+		"test_migration", "test_migration_validation",
 
 		// Rollback testing
-		"rollback test", "test rollback", "revert",
+		"rollback test", "test rollback", "rollback", "revert",
 		"migration down", "migrate down",
 
 		// Data validation

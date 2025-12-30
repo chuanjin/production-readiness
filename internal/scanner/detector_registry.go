@@ -6,28 +6,10 @@ type DetectorFunc func(content string, relPath string, signals *RepoSignals)
 // detectorRegistry holds all registered detectors
 var detectorRegistry []DetectorFunc
 
-func init() {
-	// Register all detectors here
-	// Add new detectors to this list and they'll run automatically
-	detectorRegistry = []DetectorFunc{
-		detectSecretsProvider,
-		detectInfrastructure,
-		detectRegions,
-		detectManualSteps,
-		detectK8sDeploymentStrategy,
-		detectArtifactVersioning,
-		detectHealthEndpoints,
-		detectK8sProbes,
-		detectCorrelationId,
-		detectStructuredLogging,
-		detectIngressRateLimit,
-		detectAPIGatewayRateLimit,
-		detectSLOConfig,
-		detectErrorBudget,
-		detectMigrationTool,
-		detectBackwardCompatibleMigration,
-		detectMigrationValidation,
-	}
+// RegisterDetector adds a detector to the registry
+// Call this from init() in detectors.go for each detector
+func registerDetector(fn DetectorFunc) {
+	detectorRegistry = append(detectorRegistry, fn)
 }
 
 // runAllDetectors executes all registered detectors
