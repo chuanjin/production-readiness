@@ -16,6 +16,17 @@ func init() {
 		detectManualSteps,
 		detectK8sDeploymentStrategy,
 		detectArtifactVersioning,
+		detectHealthEndpoints,
+		detectK8sProbes,
+		detectCorrelationId,
+		detectStructuredLogging,
+		detectIngressRateLimit,
+		detectAPIGatewayRateLimit,
+		detectSLOConfig,
+		detectErrorBudget,
+		detectMigrationTool,
+		detectBackwardCompatibleMigration,
+		detectMigrationValidation,
 	}
 }
 
