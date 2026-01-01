@@ -1,2 +1,5 @@
 *.yaml
+*_test.go
 detectors.go
+README.md
+LICENSE
