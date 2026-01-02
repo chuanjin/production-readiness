@@ -30,7 +30,7 @@ func Markdown(summary engine.Summary, findings []engine.Finding) string {
 	}
 
 	// Group findings by severity
-	var high, medium, low, positive []engine.Finding
+	var high, medium, low []engine.Finding
 	for _, f := range findings {
 		if !f.Triggered {
 			continue
@@ -42,15 +42,12 @@ func Markdown(summary engine.Summary, findings []engine.Finding) string {
 			medium = append(medium, f)
 		case "low":
 			low = append(low, f)
-		case "positive":
-			positive = append(positive, f)
 		}
 	}
 
 	writeSection("🔴 High Risk", high)
 	writeSection("🟠 Medium Risk", medium)
 	writeSection("🟡 Low Risk", low)
-	writeSection("🟢 Good Signals", positive)
 
 	return b.String()
 }

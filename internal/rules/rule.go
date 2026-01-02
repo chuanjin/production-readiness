@@ -3,10 +3,9 @@ package rules
 type Severity string
 
 const (
-	High     Severity = "high"
-	Medium   Severity = "medium"
-	Low      Severity = "low"
-	Positive Severity = "positive"
+	High   Severity = "high"
+	Medium Severity = "medium"
+	Low    Severity = "low"
 )
 
 type Rule struct {

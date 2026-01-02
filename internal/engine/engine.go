@@ -18,7 +18,6 @@ var ConditionRegistry = map[string]ConditionFunc{}
 func init() {
 	// ===== Built-in evaluators =====
 
-	// file_exists: ".env" OR "*.env" OR "**/*.yaml"
 	ConditionRegistry["file_exists"] = func(value interface{}, signals scanner.RepoSignals) bool {
 		pattern := value.(string)
 
@@ -39,7 +38,6 @@ func init() {
 		return false
 	}
 
-	// code_contains: "os.environ"
 	ConditionRegistry["code_contains"] = func(value interface{}, signals scanner.RepoSignals) bool {
 		needle := value.(string)
 		for _, content := range signals.FileContent {

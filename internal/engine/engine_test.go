@@ -8,7 +8,7 @@ import (
 )
 
 func TestSummarize_ScoreCalculation(t *testing.T) {
-	// 1 high, 2 medium, 3 low, 1 positive triggered
+	// 1 high, 2 medium, 3 low triggered
 	findings := []Finding{
 		{Rule: rules.Rule{Severity: rules.High}, Triggered: true},
 		{Rule: rules.Rule{Severity: rules.Medium}, Triggered: true},
@@ -16,12 +16,11 @@ func TestSummarize_ScoreCalculation(t *testing.T) {
 		{Rule: rules.Rule{Severity: rules.Low}, Triggered: true},
 		{Rule: rules.Rule{Severity: rules.Low}, Triggered: true},
 		{Rule: rules.Rule{Severity: rules.Low}, Triggered: true},
-		{Rule: rules.Rule{Severity: rules.Positive}, Triggered: true},
 	}
 
 	s := Summarize(findings)
-	// formula: 100 - (high*20 + medium*10 + low*5) + positive*5
-	exp := 100 - (1*20 + 2*10 + 3*5) + (1 * 5)
+	// formula: 100 - (high*20 + medium*10 + low*5)
+	exp := 100 - (1*20 + 2*10 + 3*5)
 	if s.Score != exp {
 		t.Fatalf("expected score %d, got %d", exp, s.Score)
 	}
