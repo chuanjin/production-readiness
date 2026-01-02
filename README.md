@@ -29,8 +29,9 @@ This project makes it observable, testable, and teachable.
 From source
 
 ```
-git clone <https://github.com/chuanjin/production-readiness>
+git clone https://github.com/chuanjin/production-readiness
 cd production-readiness
+go mod tidy
 go build -o pr ./cmd/pr
 sudo mv pr /usr/local/bin
 ```
