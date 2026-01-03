@@ -113,23 +113,60 @@ func Evaluate(ruleSet []rules.Rule, signals scanner.RepoSignals) []Finding {
 }
 
 func evaluateRule(rule rules.Rule, signals scanner.RepoSignals) bool {
-	for _, cond := range rule.Detect.NoneOf {
+	// Evaluate all three condition groups independently
+	noneOfPassed := evaluateNoneOf(rule.Detect.NoneOf, signals)
+	allOfPassed := evaluateAllOf(rule.Detect.AllOf, signals)
+	anyOfPassed := evaluateAnyOf(rule.Detect.AnyOf, signals)
+
+	// Combine results with AND logic:
+	// - none_of must pass (none of the conditions are true)
+	// - all_of must pass (all conditions are true)
+	// - any_of must pass (at least one condition is true, or no any_of exists)
+	return noneOfPassed && allOfPassed && anyOfPassed
+}
+
+// evaluateNoneOf returns true if NONE of the conditions match
+func evaluateNoneOf(conditions []map[string]interface{}, signals scanner.RepoSignals) bool {
+	// If no conditions, treat as passing (vacuous truth)
+	if len(conditions) == 0 {
+		return true
+	}
+
+	for _, cond := range conditions {
 		if evaluateCondition(cond, signals) {
-			return false
+			return false // One matched, so none_of fails
 		}
 	}
-	for _, cond := range rule.Detect.AllOf {
+	return true // None matched, so none_of passes
+}
+
+// evaluateAllOf returns true if ALL conditions match
+func evaluateAllOf(conditions []map[string]interface{}, signals scanner.RepoSignals) bool {
+	// If no conditions, treat as passing (vacuous truth)
+	if len(conditions) == 0 {
+		return true
+	}
+
+	for _, cond := range conditions {
 		if !evaluateCondition(cond, signals) {
-			return false
+			return false // One didn't match, so all_of fails
 		}
 	}
-	if len(rule.Detect.AnyOf) > 0 {
-		for _, cond := range rule.Detect.AnyOf {
-			if evaluateCondition(cond, signals) {
-				return true
-			}
-		}
-		return false
+	return true // All matched, so all_of passes
+}
+
+// evaluateAnyOf returns true if at least ONE condition matches
+// If no any_of conditions exist, returns true (vacuous truth)
+func evaluateAnyOf(conditions []map[string]interface{}, signals scanner.RepoSignals) bool {
+	// If no conditions, treat as passing
+	if len(conditions) == 0 {
+		return true
 	}
-	return true
+
+	for _, cond := range conditions {
+		if evaluateCondition(cond, signals) {
+			return true // One matched, so any_of passes
+		}
+	}
+	return false // None matched, so any_of fails
 }

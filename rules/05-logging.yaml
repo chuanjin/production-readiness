@@ -12,13 +12,13 @@ why_it_matters:
   - Missing correlation ids make distributed tracing impossible.
 
 detect:
-  any_of:
-    - code_contains: console.log
-    - code_contains: println
   none_of:
     - signal_equals:
         correlation_id_detected: true
     - signal_equals:
         structured_logging_detected: true
+  any_of:
+    - code_contains: console.log
+    - code_contains: println
 
 confidence: medium

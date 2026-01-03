@@ -79,7 +79,7 @@ The output is meant for humans – CTOs, Tech Leads, Architects, SREs.
 PRs welcome — especially:
 
 * new rules (real-world failure stories welcome)
-* rule packs for industries (FinTech, Healthcare, IoT)
+* rule packs for industries (FinTech, MedTech, IoT)
 * better scanners/detectors (Terraform, Helm, Kubernetes)
 
 ## Star the project ⭐

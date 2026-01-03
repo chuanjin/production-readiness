@@ -12,9 +12,9 @@ detect:
   none_of:
     - signal_equals:
         k8s_deployment_strategy: RollingUpdate
-    - code_contains: rollback
     - signal_equals:
         versioned_artifacts: true
+    - code_contains: rollback
     - code_contains: "docker tag"
     - code_contains: "git tag"
     - file_exists: "**/*deployment*.yaml"
