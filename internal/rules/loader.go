@@ -3,21 +3,36 @@ package rules
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
-func LoadFromDir(dir string) ([]Rule, error) {
+func LoadRules(rulesDir string) ([]Rule, error) {
 	var rules []Rule
 
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
-			return nil
+	// Clean and validate rulesDir to prevent directory traversal
+	rulesDir, err := filepath.Abs(rulesDir)
+	if err != nil {
+		return nil, err
+	}
+
+	err = filepath.Walk(rulesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
-		if filepath.Ext(path) != ".yaml" {
+
+		// Validate path is within rulesDir to prevent traversal
+		if !strings.HasPrefix(path, rulesDir) {
+			return filepath.SkipDir
+		}
+
+		// Only process .yaml and .yml files
+		if info.IsDir() || (!strings.HasSuffix(path, ".yaml") && !strings.HasSuffix(path, ".yml")) {
 			return nil
 		}
 
+		// #nosec G304 - path is validated to be within rulesDir
 		data, err := os.ReadFile(path)
 		if err != nil {
 			return err

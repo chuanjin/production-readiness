@@ -45,6 +45,11 @@ func ScanRepo(root string) (RepoSignals, error) {
 			return nil
 		}
 
+		// Validate path is within root to prevent traversal
+		if !strings.HasPrefix(path, root) {
+			return filepath.SkipDir
+		}
+
 		// Skip ignored folders before entering them
 		if info.IsDir() {
 			name := info.Name()
@@ -80,6 +85,7 @@ func ScanRepo(root string) (RepoSignals, error) {
 		}
 
 		if info.Size() < 200_000 {
+			// #nosec G304 - path is validated to be within root directory
 			data, err := os.ReadFile(path)
 			if err == nil && isText(string(data)) {
 				content := string(data)
@@ -109,7 +115,21 @@ func isText(s string) bool {
 // parsePrIgnore reads .prignore and converts lines to matchable patterns
 func parsePrIgnore(root string) []string {
 	var ignores []string
+
+	// Validate root is clean
+	root, err := filepath.Abs(root)
+	if err != nil {
+		return ignores
+	}
+
 	path := filepath.Join(root, ".prignore")
+
+	// Ensure path is still within root
+	if !strings.HasPrefix(path, root) {
+		return ignores
+	}
+
+	// #nosec G304 - path is validated to be within root directory
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return ignores

@@ -30,7 +30,7 @@ var scanCmd = &cobra.Command{
 		}
 
 		// 1️⃣ load rules
-		ruleSet, err := rules.LoadFromDir("rules")
+		ruleSet, err := rules.LoadRules("rules")
 		if err != nil {
 			fmt.Println("Error loading rules:", err)
 			return
