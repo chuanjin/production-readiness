@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+permissions:
+  contents: read
+  security-events: write  # Required for uploading SARIF
+  actions: read           # Required for accessing workflow information
+
 jobs:
   unit-test:
     name: Unit Test
