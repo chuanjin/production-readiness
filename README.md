@@ -85,3 +85,8 @@ PRs welcome — especially:
 ## Star the project ⭐
 
 If this helps you — starring the repo helps visibility and keeps development going.
+
+[![CI](https://github.com/chuanjin/production-readiness/actions/workflows/ci.yml/badge.svg)](https://github.com/chuanjin/production-readiness/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/chuanjin/production-readiness/branch/main/graph/badge.svg)](https://codecov.io/gh/chuanjin/production-readiness)
+[![Go Report Card](https://goreportcard.com/badge/github.com/chuanjin/production-readiness)](https://goreportcard.com/report/github.com/chuanjin/production-readiness)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
