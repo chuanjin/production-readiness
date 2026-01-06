@@ -393,7 +393,7 @@ func TestEvaluateRule(t *testing.T) {
 				tt.signals.IntSignals = make(map[string]int)
 			}
 
-			result := evaluateRule(tt.rule, tt.signals)
+			result := evaluateRule(&tt.rule, tt.signals)
 			if result != tt.expected {
 				t.Errorf("expected %v, got %v", tt.expected, result)
 			}
@@ -402,7 +402,7 @@ func TestEvaluateRule(t *testing.T) {
 }
 
 func TestEvaluate(t *testing.T) {
-	rules := []rules.Rule{
+	dummyRules := []rules.Rule{
 		{
 			ID:       "secrets-hardcoded",
 			Severity: "high",
@@ -448,7 +448,7 @@ func TestEvaluate(t *testing.T) {
 		IntSignals: make(map[string]int),
 	}
 
-	findings := Evaluate(rules, signals)
+	findings := Evaluate(dummyRules, signals)
 
 	if len(findings) != 2 {
 		t.Fatalf("Expected 2 findings, got %d", len(findings))

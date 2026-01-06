@@ -18,7 +18,9 @@ type Summary struct {
 func Summarize(findings []Finding) Summary {
 	var s Summary
 
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
+
 		if !f.Triggered {
 			continue
 		}

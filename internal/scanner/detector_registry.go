@@ -1,3 +1,4 @@
+// Package scanner
 package scanner
 
 // DetectorFunc is the signature for all detector functions
@@ -13,7 +14,7 @@ func registerDetector(fn DetectorFunc) {
 }
 
 // runAllDetectors executes all registered detectors
-func runAllDetectors(content string, relPath string, signals *RepoSignals) {
+func runAllDetectors(content, relPath string, signals *RepoSignals) {
 	for _, detector := range detectorRegistry {
 		detector(content, relPath, signals)
 	}

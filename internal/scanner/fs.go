@@ -56,14 +56,22 @@ func ScanRepo(root string) (RepoSignals, error) {
 			if defaultIgnoredDirs[name] {
 				return filepath.SkipDir
 			}
-			rel, _ := filepath.Rel(root, path)
+
+			rel, err := filepath.Rel(root, path)
+			if err != nil {
+				return filepath.SkipDir
+			}
+
 			if isIgnored(rel, ignorePatterns) {
 				return filepath.SkipDir
 			}
-			return nil // continue walking
+			return nil
 		}
 
-		relPath, _ := filepath.Rel(root, path)
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			return nil
+		}
 
 		println("Processing:", relPath)
 
@@ -155,14 +163,20 @@ func isIgnored(relPath string, ignorePatterns []string) bool {
 
 	for _, pattern := range ignorePatterns {
 		// Try matching against full path
-		match, _ := doublestar.Match(pattern, relPath)
+		match, err := doublestar.Match(pattern, relPath)
+		if err != nil {
+			continue
+		}
 		if match {
 			return true
 		}
 
 		// Also try matching against just the basename
 		// This allows "*.yaml" to match "rules/00-example.yaml"
-		match, _ = doublestar.Match(pattern, basename)
+		match, err = doublestar.Match(pattern, basename)
+		if err != nil {
+			continue
+		}
 		if match {
 			return true
 		}

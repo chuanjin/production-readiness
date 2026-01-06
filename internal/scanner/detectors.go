@@ -1,3 +1,4 @@
+// Package scanner
 package scanner
 
 import (
@@ -18,7 +19,7 @@ func init() {
 	registerDetector(detectArtifactVersioning)
 	registerDetector(detectHealthEndpoints)
 	registerDetector(detectK8sProbes)
-	registerDetector(detectCorrelationId)
+	registerDetector(detectCorrelationID)
 	registerDetector(detectStructuredLogging)
 	registerDetector(detectIngressRateLimit)
 	registerDetector(detectAPIGatewayRateLimit)
@@ -30,7 +31,7 @@ func init() {
 }
 
 // detectSecretsProvider checks if code uses secrets management services
-func detectSecretsProvider(content string, relPath string, signals *RepoSignals) {
+func detectSecretsProvider(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["secrets_provider_detected"] {
 		return
 	}
@@ -73,7 +74,7 @@ func detectSecretsProvider(content string, relPath string, signals *RepoSignals)
 }
 
 // detectK8sDeploymentStrategy checks Kubernetes deployment files for strategy
-func detectK8sDeploymentStrategy(content string, relPath string, signals *RepoSignals) {
+func detectK8sDeploymentStrategy(content, relPath string, signals *RepoSignals) {
 	if signals.StringSignals["k8s_deployment_strategy"] != "" {
 		return
 	}
@@ -104,7 +105,7 @@ func detectK8sDeploymentStrategy(content string, relPath string, signals *RepoSi
 }
 
 // detectArtifactVersioning checks for versioned artifact patterns
-func detectArtifactVersioning(content string, relPath string, signals *RepoSignals) {
+func detectArtifactVersioning(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["versioned_artifacts"] {
 		return
 	}
@@ -150,7 +151,7 @@ func detectArtifactVersioning(content string, relPath string, signals *RepoSigna
 }
 
 // detectInfrastructure checks if IaC (Infrastructure as Code) is present
-func detectInfrastructure(content string, relPath string, signals *RepoSignals) {
+func detectInfrastructure(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["infra_as_code_detected"] {
 		return
 	}
@@ -186,7 +187,7 @@ func detectInfrastructure(content string, relPath string, signals *RepoSignals) 
 }
 
 // detectRegions counts the number of unique cloud regions configured
-func detectRegions(content string, relPath string, signals *RepoSignals) {
+func detectRegions(content, relPath string, signals *RepoSignals) {
 	regions := make(map[string]bool)
 
 	contentLower := strings.ToLower(content)
@@ -228,7 +229,7 @@ func detectRegions(content string, relPath string, signals *RepoSignals) {
 }
 
 // detectManualSteps checks if documentation contains manual deployment steps
-func detectManualSteps(content string, relPath string, signals *RepoSignals) {
+func detectManualSteps(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["manual_steps_documented"] {
 		return
 	}
@@ -287,7 +288,7 @@ func detectManualSteps(content string, relPath string, signals *RepoSignals) {
 }
 
 // detectHealthEndpoints checks for health check HTTP endpoints
-func detectHealthEndpoints(content string, relPath string, signals *RepoSignals) {
+func detectHealthEndpoints(content, relPath string, signals *RepoSignals) {
 	contentLower := strings.ToLower(content)
 
 	// Detect /health endpoint
@@ -328,7 +329,7 @@ func detectHealthEndpoints(content string, relPath string, signals *RepoSignals)
 }
 
 // detectK8sProbes checks for Kubernetes liveness/readiness probes
-func detectK8sProbes(content string, relPath string, signals *RepoSignals) {
+func detectK8sProbes(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["k8s_probe_defined"] {
 		return
 	}
@@ -395,7 +396,7 @@ func detectK8sProbes(content string, relPath string, signals *RepoSignals) {
 }
 
 // detectCorrelationId checks for correlation/trace ID usage
-func detectCorrelationId(content string, relPath string, signals *RepoSignals) {
+func detectCorrelationID(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["correlation_id_detected"] {
 		return
 	}
@@ -438,7 +439,7 @@ func detectCorrelationId(content string, relPath string, signals *RepoSignals) {
 }
 
 // detectStructuredLogging checks for structured logging libraries and patterns
-func detectStructuredLogging(content string, relPath string, signals *RepoSignals) {
+func detectStructuredLogging(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["structured_logging_detected"] {
 		return
 	}
@@ -509,7 +510,7 @@ func detectStructuredLogging(content string, relPath string, signals *RepoSignal
 }
 
 // detectIngressRateLimit checks for rate limiting in Kubernetes Ingress
-func detectIngressRateLimit(content string, relPath string, signals *RepoSignals) {
+func detectIngressRateLimit(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["ingress_rate_limit"] {
 		return
 	}
@@ -568,7 +569,7 @@ func detectIngressRateLimit(content string, relPath string, signals *RepoSignals
 }
 
 // detectAPIGatewayRateLimit checks for rate limiting in API Gateway configurations
-func detectAPIGatewayRateLimit(content string, relPath string, signals *RepoSignals) {
+func detectAPIGatewayRateLimit(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["api_gateway_rate_limit"] {
 		return
 	}
@@ -664,7 +665,7 @@ func checkYAMLForRateLimit(obj interface{}) bool {
 }
 
 // detectSLOConfig checks for Service Level Objective configurations
-func detectSLOConfig(content string, relPath string, signals *RepoSignals) {
+func detectSLOConfig(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["slo_config_detected"] {
 		return
 	}
@@ -725,7 +726,7 @@ func detectSLOConfig(content string, relPath string, signals *RepoSignals) {
 
 		// Check for OpenSLO format
 		if kind, ok := doc["kind"].(string); ok {
-			if strings.ToLower(kind) == "slo" || strings.ToLower(kind) == "servicelevelobjective" {
+			if strings.EqualFold(kind, "slo") || strings.EqualFold(kind, "servicelevelobjective") {
 				signals.BoolSignals["slo_config_detected"] = true
 				return
 			}
@@ -739,7 +740,7 @@ func detectSLOConfig(content string, relPath string, signals *RepoSignals) {
 }
 
 // detectErrorBudget checks for error budget configurations
-func detectErrorBudget(content string, relPath string, signals *RepoSignals) {
+func detectErrorBudget(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["error_budget_detected"] {
 		return
 	}
@@ -861,7 +862,7 @@ func checkYAMLForErrorBudget(obj interface{}) bool {
 }
 
 // detectMigrationTool checks for database migration tools
-func detectMigrationTool(content string, relPath string, signals *RepoSignals) {
+func detectMigrationTool(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["migration_tool_detected"] {
 		return
 	}
@@ -905,7 +906,7 @@ func detectMigrationTool(content string, relPath string, signals *RepoSignals) {
 }
 
 // detectBackwardCompatibleMigration checks for backward compatibility hints
-func detectBackwardCompatibleMigration(content string, relPath string, signals *RepoSignals) {
+func detectBackwardCompatibleMigration(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["backward_compatible_migration_hint"] {
 		return
 	}
@@ -961,7 +962,7 @@ func detectBackwardCompatibleMigration(content string, relPath string, signals *
 }
 
 // detectMigrationValidation checks for migration validation steps
-func detectMigrationValidation(content string, relPath string, signals *RepoSignals) {
+func detectMigrationValidation(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["migration_validation_step"] {
 		return
 	}

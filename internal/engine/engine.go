@@ -1,3 +1,4 @@
+// Package engine
 package engine
 
 import (
@@ -30,7 +31,10 @@ func init() {
 
 		// 2️⃣ glob match using doublestar across full repo paths
 		for full := range signals.Files {
-			match, _ := doublestar.Match(pattern, full)
+			match, err := doublestar.Match(pattern, full)
+			if err != nil {
+				continue
+			}
 			if match {
 				return true
 			}
@@ -78,7 +82,6 @@ func init() {
 	}
 }
 
-// Allow external dynamic registration
 func RegisterCondition(name string, fn ConditionFunc) {
 	ConditionRegistry[name] = fn
 }
@@ -102,17 +105,18 @@ func evaluateCondition(raw interface{}, signals scanner.RepoSignals) bool {
 
 func Evaluate(ruleSet []rules.Rule, signals scanner.RepoSignals) []Finding {
 	var findings []Finding
-	for _, r := range ruleSet {
-		triggered := evaluateRule(r, signals)
+	// Use 'i' to avoid copying the 200-byte Rule struct into a local variable
+	for i := range ruleSet {
+		triggered := evaluateRule(&ruleSet[i], signals)
 		findings = append(findings, Finding{
-			Rule:      r,
+			Rule:      ruleSet[i], // This still copies into the new Finding
 			Triggered: triggered,
 		})
 	}
 	return findings
 }
 
-func evaluateRule(rule rules.Rule, signals scanner.RepoSignals) bool {
+func evaluateRule(rule *rules.Rule, signals scanner.RepoSignals) bool {
 	// Evaluate all three condition groups independently
 	noneOfPassed := evaluateNoneOf(rule.Detect.NoneOf, signals)
 	allOfPassed := evaluateAllOf(rule.Detect.AllOf, signals)

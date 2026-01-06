@@ -50,7 +50,8 @@ func JSON(summary engine.Summary, findings []engine.Finding) string {
 	}
 
 	// Group findings by severity (only triggered ones)
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		if !f.Triggered {
 			continue
 		}
@@ -78,7 +79,10 @@ func JSON(summary engine.Summary, findings []engine.Finding) string {
 	jsonBytes, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
 		// Fallback to compact JSON if indentation fails
-		jsonBytes, _ = json.Marshal(report)
+		jsonBytes, err = json.Marshal(report)
+		if err != nil {
+			return "failed to marshal JSON"
+		}
 	}
 
 	return string(jsonBytes)

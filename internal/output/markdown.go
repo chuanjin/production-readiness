@@ -14,12 +14,13 @@ func Markdown(summary engine.Summary, findings []engine.Finding) string {
 	b.WriteString("# Production Readiness Report\n\n")
 	b.WriteString(fmt.Sprintf("Overall Score: **%d / 100**\n\n", summary.Score))
 
-	writeSection := func(title string, rules []engine.Finding) {
-		if len(rules) == 0 {
+	writeSection := func(title string, findings []engine.Finding) {
+		if len(findings) == 0 {
 			return
 		}
 		b.WriteString(fmt.Sprintf("## %s\n\n", title))
-		for _, f := range rules {
+		for i := range findings {
+			f := &findings[i]
 			b.WriteString(fmt.Sprintf("### %s\n", f.Rule.Title))
 			b.WriteString(f.Rule.Description + "\n\n")
 			for _, w := range f.Rule.Why {
@@ -31,17 +32,18 @@ func Markdown(summary engine.Summary, findings []engine.Finding) string {
 
 	// Group findings by severity
 	var high, medium, low []engine.Finding
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		if !f.Triggered {
 			continue
 		}
 		switch f.Rule.Severity {
 		case "high":
-			high = append(high, f)
+			high = append(high, *f)
 		case "medium":
-			medium = append(medium, f)
+			medium = append(medium, *f)
 		case "low":
-			low = append(low, f)
+			low = append(low, *f)
 		}
 	}
 

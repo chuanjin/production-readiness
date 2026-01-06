@@ -308,7 +308,7 @@ func TestDetectCorrelationId(t *testing.T) {
 			signals := &RepoSignals{
 				BoolSignals: make(map[string]bool),
 			}
-			detectCorrelationId(tt.content, "handler.go", signals)
+			detectCorrelationID(tt.content, "handler.go", signals)
 
 			if signals.BoolSignals["correlation_id_detected"] != tt.expected {
 				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["correlation_id_detected"])
