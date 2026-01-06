@@ -17,6 +17,9 @@ linters:
         - diagnostic
         - style
         - performance
+    govet:
+      enable:
+        - shadow
     revive:
       rules:
         - name: var-naming
@@ -30,28 +33,23 @@ linters:
       - std-error-handling
     rules:
       - linters:
+          - dupl
           - errcheck
           - gosec
         path: _test\.go
+      - linters:
+          - gosec
+        path: internal/scanner/fs\.go
+        text: G304
+      - linters:
+          - gosec
+        path: internal/rules/loader\.go
+        text: G304
     paths:
       - third_party$
       - builtin$
       - examples$
 issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gosec
-    # Allow G304 in scanner/fs.go and rules/loader.go - paths are validated
-    - path: internal/scanner/fs\.go
-      linters:
-        - gosec
-      text: "G304"
-    - path: internal/rules/loader\.go
-      linters:
-        - gosec
-      text: "G304"
   max-issues-per-linter: 0
   max-same-issues: 0
 formatters:

@@ -57,8 +57,8 @@ func ScanRepo(root string) (RepoSignals, error) {
 				return filepath.SkipDir
 			}
 
-			rel, err := filepath.Rel(root, path)
-			if err != nil {
+			rel, e := filepath.Rel(root, path)
+			if e != nil {
 				return filepath.SkipDir
 			}
 
