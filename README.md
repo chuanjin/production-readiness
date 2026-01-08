@@ -214,13 +214,25 @@ Seniors use it to scale their judgment.
 - New joiner learning the system, teaches them “what matters”
 - CTO reviewing vendors and compares readiness across repos
 
-## Contributing
+## Extending production-readiness
 
-PRs welcome — especially:
+`production-readiness` is designed to grow with real-world experience.
 
-- new rules (real-world failure stories welcome)
-- rule packs for industries (FinTech, MedTech, IoT)
-- better scanners/detectors (Terraform, Helm, Kubernetes)
+You can extend it by:
+
+- Adding new production-readiness rules (YAML)
+- Implementing new detectors for additional platforms and tools
+
+Documentation:
+
+- `docs/rules.md` — how to write rules
+- `docs/detectors.md` — how to add detectors
+- `docs/contributing.md` — contribution guide
+
+## Scope
+
+This project focuses on **deterministic detection** of production-readiness signals.
+Interpretation, workflow automation, and organizational policy are intentionally kept out of scope.
 
 ## Star the project ⭐
 
