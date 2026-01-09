@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,7 +24,41 @@ var defaultIgnoredDirs = map[string]bool{
 	"node_modules": true,
 }
 
+// Logger interface allows for flexible logging implementations
+type Logger interface {
+	Printf(format string, v ...interface{})
+	Println(v ...interface{})
+}
+
+// ScanOptions configures the repository scan
+type ScanOptions struct {
+	Debug  bool
+	Logger Logger
+}
+
+// defaultLogger is a no-op logger
+type noopLogger struct{}
+
+func (n *noopLogger) Printf(format string, v ...interface{}) {}
+func (n *noopLogger) Println(v ...interface{})               {}
+
+// ScanRepo scans the repository with default options (no debug output)
 func ScanRepo(root string) (RepoSignals, error) {
+	debug := false // or read from env var
+
+	var logger Logger = &noopLogger{}
+	if debug {
+		logger = log.New(os.Stdout, "[scanner] ", log.LstdFlags)
+	}
+
+	return ScanRepoWithOptions(root, ScanOptions{
+		Debug:  debug,
+		Logger: logger,
+	})
+}
+
+// ScanRepoWithOptions scans the repository with custom options
+func ScanRepoWithOptions(root string, opts ScanOptions) (RepoSignals, error) {
 	signals := RepoSignals{
 		Files:         make(map[string]bool),
 		FileContent:   make(map[string]string),
@@ -32,13 +67,21 @@ func ScanRepo(root string) (RepoSignals, error) {
 		IntSignals:    make(map[string]int),
 	}
 
+	// Use provided logger or default to noop
+	logger := opts.Logger
+	if logger == nil {
+		logger = &noopLogger{}
+	}
+
 	ignorePatterns := parsePrIgnore(root)
 
-	println("=== Ignore patterns ===")
-	for _, p := range ignorePatterns {
-		println("Pattern:", p)
+	if opts.Debug {
+		logger.Println("=== Ignore patterns ===")
+		for _, p := range ignorePatterns {
+			logger.Printf("Pattern: %s", p)
+		}
+		logger.Println("")
 	}
-	println("")
 
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -63,6 +106,9 @@ func ScanRepo(root string) (RepoSignals, error) {
 			}
 
 			if isIgnored(rel, ignorePatterns) {
+				if opts.Debug {
+					logger.Printf("Skipping directory: %s (ignored)", rel)
+				}
 				return filepath.SkipDir
 			}
 			return nil
@@ -73,22 +119,30 @@ func ScanRepo(root string) (RepoSignals, error) {
 			return nil
 		}
 
-		println("Processing:", relPath)
+		if opts.Debug {
+			logger.Printf("Processing: %s", relPath)
+		}
 
 		// Always store to Files for existing check in engine
 		signals.Files[relPath] = true
-		println("  -> Added to Files map")
+		if opts.Debug {
+			logger.Println("  -> Added to Files map")
+		}
 
 		// Check if ignored BEFORE adding to Files
 		if isIgnored(relPath, ignorePatterns) {
-			println("  -> IGNORED by .prignore")
+			if opts.Debug {
+				logger.Println("  -> IGNORED by .prignore")
+			}
 			return nil
 		}
 
 		ext := strings.ToLower(filepath.Ext(path))
 
 		if binaryExts[ext] {
-			println("  -> Skipped (binary)")
+			if opts.Debug {
+				logger.Println("  -> Skipped (binary)")
+			}
 			return nil
 		}
 
@@ -98,20 +152,24 @@ func ScanRepo(root string) (RepoSignals, error) {
 			if err == nil && isText(string(data)) {
 				content := string(data)
 				signals.FileContent[relPath] = content
-				println("  -> Added to FileContent")
+				if opts.Debug {
+					logger.Println("  -> Added to FileContent")
+				}
 
 				// Run all detectors dynamically
 				runAllDetectors(content, relPath, &signals)
 			}
-		} else {
-			println("  -> Skipped (too large)")
+		} else if opts.Debug {
+			logger.Println("  -> Skipped (too large)")
 		}
 		return nil
 	})
 
-	println("\n=== Summary ===")
-	println("Total files:", len(signals.Files))
-	println("Files with content:", len(signals.FileContent))
+	if opts.Debug {
+		logger.Println("\n=== Summary ===")
+		logger.Printf("Total files: %d", len(signals.Files))
+		logger.Printf("Files with content: %d", len(signals.FileContent))
+	}
 
 	return signals, err
 }
