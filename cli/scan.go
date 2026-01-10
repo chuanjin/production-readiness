@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/chuanjin/production-readiness/internal/engine"
@@ -11,7 +13,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var format string
+var (
+	format string
+	debug  bool
+)
 
 var scanCmd = &cobra.Command{
 	Use:   "scan [path]",
@@ -36,8 +41,16 @@ var scanCmd = &cobra.Command{
 			return
 		}
 
-		// 2️⃣ scan repo
-		signals, err := scanner.ScanRepo(absPath)
+		// 2️⃣ scan repo with debug option
+		var logger scanner.Logger = &scanner.NoopLogger{}
+		if debug {
+			logger = log.New(os.Stdout, "[scanner] ", log.LstdFlags)
+		}
+
+		signals, err := scanner.ScanRepoWithOptions(absPath, scanner.ScanOptions{
+			Debug:  debug,
+			Logger: logger,
+		})
 		if err != nil {
 			fmt.Println("Error scanning:", err)
 			return
@@ -46,7 +59,7 @@ var scanCmd = &cobra.Command{
 		// 3️⃣ evaluate
 		findings := engine.Evaluate(ruleSet, signals)
 
-		//  Summarize
+		// Summarize
 		summary := engine.Summarize(findings)
 
 		// 4️⃣ output
@@ -62,4 +75,5 @@ var scanCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(scanCmd)
 	scanCmd.Flags().StringVarP(&format, "format", "f", "md", "output format: md or json")
+	scanCmd.Flags().BoolVarP(&debug, "debug", "d", false, "enable debug logging")
 }

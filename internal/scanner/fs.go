@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,24 +35,17 @@ type ScanOptions struct {
 	Logger Logger
 }
 
-// defaultLogger is a no-op logger
-type noopLogger struct{}
+// NoopLogger is a no-op logger (exported for external use)
+type NoopLogger struct{}
 
-func (n *noopLogger) Printf(format string, v ...interface{}) {}
-func (n *noopLogger) Println(v ...interface{})               {}
+func (n *NoopLogger) Printf(format string, v ...interface{}) {}
+func (n *NoopLogger) Println(v ...interface{})               {}
 
 // ScanRepo scans the repository with default options (no debug output)
 func ScanRepo(root string) (RepoSignals, error) {
-	debug := false // or read from env var
-
-	var logger Logger = &noopLogger{}
-	if debug {
-		logger = log.New(os.Stdout, "[scanner] ", log.LstdFlags)
-	}
-
 	return ScanRepoWithOptions(root, ScanOptions{
-		Debug:  debug,
-		Logger: logger,
+		Debug:  false,
+		Logger: &NoopLogger{},
 	})
 }
 
@@ -70,7 +62,7 @@ func ScanRepoWithOptions(root string, opts ScanOptions) (RepoSignals, error) {
 	// Use provided logger or default to noop
 	logger := opts.Logger
 	if logger == nil {
-		logger = &noopLogger{}
+		logger = &NoopLogger{}
 	}
 
 	ignorePatterns := parsePrIgnore(root)
