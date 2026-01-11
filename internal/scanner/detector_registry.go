@@ -1,4 +1,6 @@
-// Package scanner
+// Package scanner detects production-readiness signals from repository files.
+// It scans code, configuration, and infrastructure files to identify patterns
+// related to deployment, security, observability, and operational practices.
 package scanner
 
 // DetectorFunc is the signature for all detector functions

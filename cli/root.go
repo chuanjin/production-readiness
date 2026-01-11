@@ -1,3 +1,5 @@
+// Package cli provides the command-line interface for the production-readiness checker.
+// It defines commands for scanning repositories, displaying results, and managing rules.
 package cli
 
 import (

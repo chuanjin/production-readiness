@@ -1,4 +1,6 @@
-// Package engine
+// Package engine evaluates production-readiness rules against repository signals.
+// It processes rule conditions (any_of, all_of, none_of) and determines which
+// rules are triggered based on detected signals from the scanner.
 package engine
 
 import (

@@ -1,3 +1,6 @@
+// Package output formats production-readiness findings for display.
+// It supports multiple output formats including JSON and Markdown,
+// with options for detailed or summary reporting.
 package output
 
 import (

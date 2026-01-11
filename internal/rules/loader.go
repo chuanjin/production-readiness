@@ -1,3 +1,6 @@
+// Package rules handles loading and parsing production-readiness rule definitions.
+// Rules are defined in YAML files and specify detection conditions for
+// various production-readiness concerns like security, reliability, and observability.
 package rules
 
 import (
