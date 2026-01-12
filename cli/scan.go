@@ -65,9 +65,9 @@ var scanCmd = &cobra.Command{
 		// 4️⃣ output
 		switch format {
 		case "json":
-			fmt.Println(output.JSON(summary, findings))
+			fmt.Println(output.JSON(summary, findings, &signals))
 		default:
-			fmt.Println(output.Markdown(summary, findings))
+			fmt.Println(output.Markdown(summary, findings, &signals))
 		}
 	},
 }

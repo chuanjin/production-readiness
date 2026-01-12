@@ -10,20 +10,30 @@ type Finding struct {
 
 // Summary aggregates findings and computes the score
 type Summary struct {
-	High, Medium, Low int
-	Score             int
+	Total     int // Total number of rules evaluated
+	Triggered int // Total number of rules triggered
+	Passed    int // Total number of rules passed
+	High      int // Number of high severity issues
+	Medium    int // Number of medium severity issues
+	Low       int // Number of low severity issues
+	Score     int // Overall readiness score (0-100)
 }
 
 // Summarize calculates counts and a simple readiness score
 func Summarize(findings []Finding) Summary {
 	var s Summary
 
+	s.Total = len(findings)
+
 	for i := range findings {
 		f := &findings[i]
 
 		if !f.Triggered {
+			s.Passed++
 			continue
 		}
+
+		s.Triggered++
 
 		switch f.Rule.Severity {
 		case rules.High:
@@ -46,4 +56,42 @@ func Summarize(findings []Finding) Summary {
 	s.Score = score
 
 	return s
+}
+
+// GetSeverityCounts returns a breakdown of issues by severity
+func (s Summary) GetSeverityCounts() map[string]int {
+	return map[string]int{
+		"high":   s.High,
+		"medium": s.Medium,
+		"low":    s.Low,
+	}
+}
+
+// HasIssues returns true if any rules were triggered
+func (s Summary) HasIssues() bool {
+	return s.Triggered > 0
+}
+
+// IsProductionReady returns true if score is above threshold (default 80)
+func (s Summary) IsProductionReady(threshold int) bool {
+	if threshold == 0 {
+		threshold = 80 // Default threshold
+	}
+	return s.Score >= threshold
+}
+
+// Grade returns a letter grade based on score
+func (s Summary) Grade() string {
+	switch {
+	case s.Score >= 90:
+		return "A"
+	case s.Score >= 80:
+		return "B"
+	case s.Score >= 70:
+		return "C"
+	case s.Score >= 60:
+		return "D"
+	default:
+		return "F"
+	}
 }
