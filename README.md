@@ -8,7 +8,16 @@
 Most systems don’t fail because of bugs.
 They fail because they were never truly production-ready.
 
-**production-readiness** is a read-only, opinionated tool that evaluates whether a system is *actually safe to run in production* — based on the same mental checklists senior engineers use when reviewing real systems before they go live.
+**production-readiness** is a read-only, opinionated tool that evaluates whether
+a system is *actually safe to run in production* — based on the same mental
+checklists senior engineers use when reviewing real systems before they
+go live.
+
+This project is for engineers who already run real systems in production and
+want fewer surprises.
+
+If you are responsible for availability, on-call, or launch decisions,
+this tool is for you.
 
 ---
 
@@ -35,6 +44,21 @@ It does **not** gate your pipeline (at least in current version).
 It only does one thing:
 
 > **Tell you where your system is most likely to fail — and why.**
+
+---
+
+## What this catches in practice
+
+In real systems, this tool typically surfaces issues like:
+
+- A deployment pipeline that has no rollback path, even though rollbacks are assumed
+- Database migrations that are not backward-compatible and will fail under load
+- Services with metrics but no request correlation, making incidents hard to debug
+- Rate limiting missing at the edge, leading to cascading failures
+- Secrets drifting into environment files “temporarily” and never leaving
+
+These are rarely flagged by linters or security scanners, but they are common causes of real production incidents.
+If you have ever said “we should have seen this coming”, this tool is meant to make those risks visible earlier.
 
 ---
 
@@ -234,9 +258,23 @@ Documentation:
 This project focuses on **deterministic detection** of production-readiness signals.
 Interpretation, workflow automation, and organizational policy are intentionally kept out of scope.
 
+## Direction
+
+### Short-term focus
+
+- Expand rule coverage for common failure modes
+- Improve report explanations with real incident patterns
+- Add more detectors for Terraform, Helm, and Kubernetes
+
+### Longer-term
+
+- Keep this tool read-only and explainable
+- Avoid turning it into a compliance or gatekeeping system
+- This project is meant to stay lightweight and opinionated.
+
 ## Star the project ⭐
 
-If this helps you — starring the repo helps visibility and keeps development going.
+If this reflects problems you have seen in production, a star helps signal that this direction is useful.
 
 [![CI](https://github.com/chuanjin/production-readiness/actions/workflows/ci.yml/badge.svg)](https://github.com/chuanjin/production-readiness/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/chuanjin/production-readiness/branch/main/graph/badge.svg)](https://codecov.io/gh/chuanjin/production-readiness)
