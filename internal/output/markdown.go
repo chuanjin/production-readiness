@@ -9,6 +9,12 @@ import (
 	"github.com/chuanjin/production-readiness/internal/scanner"
 )
 
+const (
+	SeverityHigh   = "high"
+	SeverityMedium = "medium"
+	SeverityLow    = "low"
+)
+
 // Markdown generates a human-readable report
 func Markdown(summary engine.Summary, findings []engine.Finding, signals *scanner.RepoSignals) string {
 	var b strings.Builder
@@ -47,11 +53,11 @@ func Markdown(summary engine.Summary, findings []engine.Finding, signals *scanne
 			continue
 		}
 		switch f.Rule.Severity {
-		case "high":
+		case SeverityHigh:
 			high = append(high, *f)
-		case "medium":
+		case SeverityMedium:
 			medium = append(medium, *f)
-		case "low":
+		case SeverityLow:
 			low = append(low, *f)
 		}
 	}
@@ -151,11 +157,11 @@ func MarkdownSummary(summary engine.Summary, findings []engine.Finding) string {
 			continue
 		}
 		switch f.Rule.Severity {
-		case "high":
+		case SeverityHigh:
 			highCount++
-		case "medium":
+		case SeverityMedium:
 			mediumCount++
-		case "low":
+		case SeverityLow:
 			lowCount++
 		}
 	}

@@ -29,6 +29,11 @@ func init() {
 	registerDetector(detectMigrationValidation)
 }
 
+const (
+	ExtYAML = ".yaml"
+	ExtYML  = ".yml"
+)
+
 // detectSecretsProvider checks if code uses secrets management services
 func detectSecretsProvider(content, relPath string, signals *RepoSignals) {
 	if signals.BoolSignals["secrets_provider_detected"] {
@@ -80,7 +85,7 @@ func detectK8sDeploymentStrategy(content, relPath string, signals *RepoSignals) 
 
 	// Only check YAML files
 	ext := strings.ToLower(filepath.Ext(relPath))
-	if ext != ".yaml" && ext != ".yml" {
+	if ext != ExtYAML && ext != ExtYML {
 		return
 	}
 
@@ -620,7 +625,7 @@ func detectAPIGatewayRateLimit(content, relPath string, signals *RepoSignals) {
 
 	// Also check YAML for API Gateway configs
 	ext := strings.ToLower(filepath.Ext(relPath))
-	if ext == ".yaml" || ext == ".yml" {
+	if ext == ExtYAML || ext == ExtYML {
 		var doc map[string]interface{}
 		if err := yaml.Unmarshal([]byte(content), &doc); err != nil {
 			return
@@ -717,7 +722,7 @@ func detectSLOConfig(content, relPath string, signals *RepoSignals) {
 
 	// Also check YAML structure for SLO configs
 	ext := strings.ToLower(filepath.Ext(relPath))
-	if ext == ".yaml" || ext == ".yml" {
+	if ext == ExtYAML || ext == ExtYML {
 		var doc map[string]interface{}
 		if err := yaml.Unmarshal([]byte(content), &doc); err != nil {
 			return
@@ -781,7 +786,7 @@ func detectErrorBudget(content, relPath string, signals *RepoSignals) {
 
 	// Also check YAML structure for error budget configs
 	ext := strings.ToLower(filepath.Ext(relPath))
-	if ext == ".yaml" || ext == ".yml" {
+	if ext == ExtYAML || ext == ExtYML {
 		var doc map[string]interface{}
 		if err := yaml.Unmarshal([]byte(content), &doc); err != nil {
 			return
