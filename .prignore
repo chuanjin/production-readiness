@@ -1,6 +1,6 @@
 *.yaml
 *_test.go
-detectors.go
+detectors*.go
 docs/
 README.md
 LICENSE
