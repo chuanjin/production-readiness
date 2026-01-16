@@ -1,0 +1,165 @@
+package scanner
+
+import (
+	"path/filepath"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+)
+
+// detectK8sDeploymentStrategy checks Kubernetes deployment files for strategy
+func detectK8sDeploymentStrategy(content, relPath string, signals *RepoSignals) {
+	if signals.StringSignals["k8s_deployment_strategy"] != "" {
+		return
+	}
+
+	// Only check YAML files
+	ext := strings.ToLower(filepath.Ext(relPath))
+	if ext != ExtYAML && ext != ExtYML {
+		return
+	}
+
+	var doc map[string]interface{}
+	if err := yaml.Unmarshal([]byte(content), &doc); err != nil {
+		return
+	}
+
+	kind, ok := doc["kind"].(string)
+	if !ok || kind != "Deployment" {
+		return
+	}
+
+	if spec, ok := doc["spec"].(map[string]interface{}); ok {
+		if strategy, ok := spec["strategy"].(map[string]interface{}); ok {
+			if strategyType, ok := strategy["type"].(string); ok {
+				signals.StringSignals["k8s_deployment_strategy"] = strategyType
+			}
+		}
+	}
+}
+
+// detectK8sProbes checks for Kubernetes liveness/readiness probes
+func detectK8sProbes(content, relPath string, signals *RepoSignals) {
+	if signals.BoolSignals["k8s_probe_defined"] {
+		return
+	}
+
+	// Only check YAML files
+	ext := strings.ToLower(filepath.Ext(relPath))
+	if ext != ".yaml" && ext != ".yml" {
+		return
+	}
+
+	var doc map[string]interface{}
+	if err := yaml.Unmarshal([]byte(content), &doc); err != nil {
+		return
+	}
+
+	// Check if it's a Kubernetes resource with containers
+	kind, ok := doc["kind"].(string)
+	if !ok {
+		return
+	}
+
+	// Look for probes in Pod, Deployment, StatefulSet, DaemonSet, etc.
+	validKinds := map[string]bool{
+		"Pod": true, "Deployment": true, "StatefulSet": true,
+		"DaemonSet": true, "Job": true, "CronJob": true,
+		"ReplicaSet": true,
+	}
+
+	if !validKinds[kind] {
+		return
+	}
+
+	// Navigate to containers
+	var containers []interface{}
+
+	if spec, ok := doc["spec"].(map[string]interface{}); ok {
+		// For Deployments, StatefulSets, etc., probes are in spec.template.spec.containers
+		if template, ok := spec["template"].(map[string]interface{}); ok {
+			if templateSpec, ok := template["spec"].(map[string]interface{}); ok {
+				if c, ok := templateSpec["containers"].([]interface{}); ok {
+					containers = c
+				}
+			}
+		} else if c, ok := spec["containers"].([]interface{}); ok {
+			// For Pods, probes are directly in spec.containers
+			containers = c
+		}
+	}
+
+	// Check if any container has probes
+	for _, container := range containers {
+		if c, ok := container.(map[string]interface{}); ok {
+			// Check for livenessProbe or readinessProbe
+			if _, hasLiveness := c["livenessProbe"]; hasLiveness {
+				signals.BoolSignals["k8s_probe_defined"] = true
+				return
+			}
+			if _, hasReadiness := c["readinessProbe"]; hasReadiness {
+				signals.BoolSignals["k8s_probe_defined"] = true
+				return
+			}
+		}
+	}
+}
+
+// detectIngressRateLimit checks for rate limiting in Kubernetes Ingress
+func detectIngressRateLimit(content, relPath string, signals *RepoSignals) {
+	if signals.BoolSignals["ingress_rate_limit"] {
+		return
+	}
+
+	// Only check YAML files
+	ext := strings.ToLower(filepath.Ext(relPath))
+	if ext != ".yaml" && ext != ".yml" {
+		return
+	}
+
+	var doc map[string]interface{}
+	if err := yaml.Unmarshal([]byte(content), &doc); err != nil {
+		return
+	}
+
+	// Check if it's an Ingress resource
+	kind, ok := doc["kind"].(string)
+	if !ok || kind != "Ingress" {
+		return
+	}
+
+	// Check annotations for rate limiting
+	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
+		if annotations, ok := metadata["annotations"].(map[string]interface{}); ok {
+			// NGINX Ingress rate limiting annotations
+			rateLimitAnnotations := []string{
+				"nginx.ingress.kubernetes.io/limit-rps",
+				"nginx.ingress.kubernetes.io/limit-rpm",
+				"nginx.ingress.kubernetes.io/limit-connections",
+				"nginx.ingress.kubernetes.io/limit-burst-multiplier",
+
+				// Traefik rate limiting
+				"traefik.ingress.kubernetes.io/rate-limit",
+
+				// Kong rate limiting
+				"konghq.com/plugins",
+				"rate-limiting.plugin.konghq.com",
+			}
+
+			for _, annotation := range rateLimitAnnotations {
+				if _, exists := annotations[annotation]; exists {
+					signals.BoolSignals["ingress_rate_limit"] = true
+					return
+				}
+			}
+
+			// Also check if Kong plugins annotation contains rate-limiting
+			if plugins, ok := annotations["konghq.com/plugins"].(string); ok {
+				if strings.Contains(strings.ToLower(plugins), "rate-limit") {
+					signals.BoolSignals["ingress_rate_limit"] = true
+					return
+				}
+			}
+		}
+	}
+}
