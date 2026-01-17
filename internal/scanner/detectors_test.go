@@ -2,6 +2,8 @@ package scanner
 
 import (
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestDetectSecretsProvider(t *testing.T) {
@@ -480,6 +482,140 @@ func TestDetectMigrationValidation(t *testing.T) {
 
 			if signals.BoolSignals["migration_validation_step"] != tt.expected {
 				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["migration_validation_step"])
+			}
+		})
+	}
+}
+
+func TestDetectResourceLimits(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected bool
+	}{
+		{
+			name: "Pod with limits detected",
+			content: `
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: app
+    resources:
+      limits:
+        memory: "128Mi"
+`,
+			expected: true,
+		},
+		{
+			name: "Deployment with limits detected",
+			content: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        resources:
+          limits:
+            cpu: "500m"
+`,
+			expected: true,
+		},
+		{
+			name: "No limits defined",
+			content: `
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: app
+    resources:
+      requests:
+        cpu: "100m"
+`,
+			expected: false,
+		},
+		{
+			name: "No resources defined",
+			content: `
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: app
+`,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			signals := &RepoSignals{
+				BoolSignals: make(map[string]bool),
+			}
+			detectResourceLimits(tt.content, "deploy.yaml", signals)
+
+			if signals.BoolSignals["k8s_resource_limits_detected"] != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["k8s_resource_limits_detected"])
+			}
+		})
+	}
+}
+
+func TestCheckYAMLForRateLimit(t *testing.T) {
+	tests := []struct {
+		name     string
+		yaml     string
+		expected bool
+	}{
+		{
+			name: "Rate limit key exists",
+			yaml: `
+rate_limit: 100
+`,
+			expected: true,
+		},
+		{
+			name: "Nested rate limit key",
+			yaml: `
+services:
+  api:
+    throttle:
+      burst: 10
+`,
+			expected: true,
+		},
+		{
+			name: "List with rate limit key",
+			yaml: `
+plugins:
+  - name: my-plugin
+    rate-limit: 100
+`,
+			expected: true,
+		},
+		{
+			name: "No rate limit",
+			yaml: `
+name: my-service
+port: 8080
+`,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var doc interface{}
+			err := yaml.Unmarshal([]byte(tt.yaml), &doc)
+			if err != nil {
+				t.Fatalf("failed to unmarshal yaml: %v", err)
+			}
+			result := checkYAMLForRateLimit(doc)
+			if result != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result)
 			}
 		})
 	}

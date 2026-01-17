@@ -163,3 +163,68 @@ func detectIngressRateLimit(content, relPath string, signals *RepoSignals) {
 		}
 	}
 }
+
+// detectResourceLimits checks for Kubernetes resource limits configurations
+func detectResourceLimits(content, relPath string, signals *RepoSignals) {
+	if signals.BoolSignals["k8s_resource_limits_detected"] {
+		return
+	}
+
+	ext := strings.ToLower(filepath.Ext(relPath))
+	if ext != ExtYAML && ext != ExtYML {
+		return
+	}
+
+	var doc map[string]interface{}
+	if err := yaml.Unmarshal([]byte(content), &doc); err != nil {
+		return
+	}
+
+	// Check if it's a Kubernetes resource
+	kind, ok := doc["kind"].(string)
+	if !ok {
+		return
+	}
+
+	validKinds := map[string]bool{
+		"Pod": true, "Deployment": true, "StatefulSet": true,
+		"DaemonSet": true, "Job": true, "CronJob": true,
+		"ReplicaSet": true,
+	}
+
+	if !validKinds[kind] {
+		return
+	}
+
+	// Navigate to containers
+	var containers []interface{}
+
+	if spec, ok := doc["spec"].(map[string]interface{}); ok {
+		if template, ok := spec["template"].(map[string]interface{}); ok {
+			if templateSpec, ok := template["spec"].(map[string]interface{}); ok {
+				if c, ok := templateSpec["containers"].([]interface{}); ok {
+					containers = c
+				}
+			}
+		} else if c, ok := spec["containers"].([]interface{}); ok {
+			// For Pods, probes are directly in spec.containers
+			containers = c
+		}
+	}
+
+	for _, container := range containers {
+		if c, ok := container.(map[string]interface{}); ok {
+			if resources, ok := c["resources"].(map[string]interface{}); ok {
+				if limits, ok := resources["limits"].(map[string]interface{}); ok {
+					// Check if cpu or memory limits are defined
+					_, hasCPU := limits["cpu"]
+					_, hasMemory := limits["memory"]
+					if hasCPU || hasMemory {
+						signals.BoolSignals["k8s_resource_limits_detected"] = true
+						return
+					}
+				}
+			}
+		}
+	}
+}

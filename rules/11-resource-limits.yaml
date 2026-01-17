@@ -1,0 +1,17 @@
+id: resource-limits
+severity: medium
+category: reliability
+title: No resource limits detected
+description: >
+  No CPU/Memory resource limits were detected in Kubernetes configurations.
+why_it_matters:
+  - Without limits, a single container can starve the node of resources.
+  - Causes "noisy neighbor" problems affecting other services.
+  - Essential for predictable scheduling and autoscaling.
+detect:
+  all_of:
+    - code_contains: "apiVersion:"
+  none_of:
+    - signal_equals:
+        k8s_resource_limits_detected: true
+confidence: medium

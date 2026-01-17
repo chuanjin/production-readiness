@@ -10,6 +10,7 @@ func init() {
 	registerDetector(detectK8sDeploymentStrategy)
 	registerDetector(detectK8sProbes)
 	registerDetector(detectIngressRateLimit)
+	registerDetector(detectResourceLimits)
 
 	registerDetector(detectHealthEndpoints)
 	registerDetector(detectCorrelationID)
