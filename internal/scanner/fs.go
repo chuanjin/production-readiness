@@ -52,11 +52,12 @@ func ScanRepo(root string) (RepoSignals, error) {
 // ScanRepoWithOptions scans the repository with custom options
 func ScanRepoWithOptions(root string, opts ScanOptions) (RepoSignals, error) {
 	signals := RepoSignals{
-		Files:         make(map[string]bool),
-		FileContent:   make(map[string]string),
-		BoolSignals:   make(map[string]bool),
-		StringSignals: make(map[string]string),
-		IntSignals:    make(map[string]int),
+		Files:           make(map[string]bool),
+		FileContent:     make(map[string]string),
+		BoolSignals:     make(map[string]bool),
+		StringSignals:   make(map[string]string),
+		IntSignals:      make(map[string]int),
+		DetectedRegions: make(map[string]bool),
 	}
 
 	// Use provided logger or default to noop

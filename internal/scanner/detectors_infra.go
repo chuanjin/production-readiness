@@ -85,42 +85,47 @@ func detectInfrastructure(content, relPath string, signals *RepoSignals) {
 
 // detectRegions counts the number of unique cloud regions configured
 func detectRegions(content, relPath string, signals *RepoSignals) {
-	regions := make(map[string]bool)
+	// Initialize if nil (defensive programming, though fs.go handles it)
+	if signals.DetectedRegions == nil {
+		signals.DetectedRegions = make(map[string]bool)
+	}
 
 	contentLower := strings.ToLower(content)
 
 	// AWS regions
 	awsRegions := []string{
 		"us-east-1", "us-east-2", "us-west-1", "us-west-2",
-		"eu-west-1", "eu-west-2", "eu-west-3", "eu-central-1", "eu-north-1",
-		"ap-southeast-1", "ap-southeast-2", "ap-northeast-1", "ap-northeast-2",
-		"sa-east-1", "ca-central-1", "ap-south-1",
+		"af-south-1", "ap-east-1", "ap-south-1", "ap-northeast-3", "ap-northeast-2",
+		"ap-southeast-1", "ap-southeast-2", "ap-northeast-1",
+		"ca-central-1", "eu-central-1", "eu-west-1", "eu-west-2", "eu-south-1",
+		"eu-west-3", "eu-north-1", "me-south-1", "sa-east-1", "us-gov-east-1", "us-gov-west-1",
 	}
 
 	// GCP regions
 	gcpRegions := []string{
-		"us-central1", "us-east1", "us-west1", "us-east4",
-		"europe-west1", "europe-west2", "europe-west3", "europe-north1",
-		"asia-east1", "asia-southeast1", "asia-northeast1",
+		"us-central1", "us-east1", "us-east4", "us-west1", "us-west2", "us-west3", "us-west4",
+		"southamerica-east1", "northamerica-northeast1",
+		"europe-west1", "europe-west2", "europe-west3", "europe-west4", "europe-west6", "europe-north1",
+		"asia-east1", "asia-east2", "asia-northeast1", "asia-northeast2", "asia-northeast3",
+		"asia-southeast1", "asia-southeast2", "australia-southeast1",
 	}
 
 	// Azure regions
 	azureRegions := []string{
-		"eastus", "eastus2", "westus", "westus2", "centralus",
-		"northeurope", "westeurope", "uksouth", "ukwest",
-		"southeastasia", "eastasia", "japaneast", "japanwest",
+		"eastus", "eastus2", "southcentralus", "westus2", "westus3", "australiaeast",
+		"southeastasia", "northeurope", "westeurope", "uksouth", "ukwest", "francecentral",
+		"germanywestcentral", "norwayeast", "switzerlandnorth", "japaneast", "japanwest",
+		"centralindia", "southindia", "westindia", "canadacentral", "koreacentral",
 	}
 
 	allRegions := append(append(awsRegions, gcpRegions...), azureRegions...)
 
 	for _, region := range allRegions {
 		if strings.Contains(contentLower, region) {
-			regions[region] = true
+			signals.DetectedRegions[region] = true
 		}
 	}
 
-	// Update the count (only if we found more regions than before)
-	if len(regions) > signals.IntSignals["region_count"] {
-		signals.IntSignals["region_count"] = len(regions)
-	}
+	// Update the global count based on the accumulated unique regions
+	signals.IntSignals["region_count"] = len(signals.DetectedRegions)
 }

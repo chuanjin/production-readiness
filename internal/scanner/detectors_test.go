@@ -91,37 +91,65 @@ func TestDetectInfrastructure(t *testing.T) {
 }
 
 func TestDetectRegions(t *testing.T) {
+	// 1. Test basic detection and global accumulation across multiple calls
+	t.Run("Global accumulation", func(t *testing.T) {
+		signals := &RepoSignals{
+			IntSignals:      make(map[string]int),
+			DetectedRegions: make(map[string]bool),
+		}
+
+		// First file: us-east-1
+		detectRegions(`region = "us-east-1"`, "file1.tf", signals)
+		if signals.IntSignals["region_count"] != 1 {
+			t.Errorf("expected 1 region, got %d", signals.IntSignals["region_count"])
+		}
+
+		// Second file: eu-west-1 (should increment count)
+		detectRegions(`backup_region = "eu-west-1"`, "file2.tf", signals)
+		if signals.IntSignals["region_count"] != 2 {
+			t.Errorf("expected 2 regions, got %d", signals.IntSignals["region_count"])
+		}
+
+		// Third file: us-east-1 again (duplicate, should NOT increment)
+		detectRegions(`another_ref = "us-east-1"`, "file3.tf", signals)
+		if signals.IntSignals["region_count"] != 2 {
+			t.Errorf("expected 2 regions, got %d", signals.IntSignals["region_count"])
+		}
+	})
+
+	// 2. Test specific new regions
 	tests := []struct {
 		name          string
 		content       string
 		expectedCount int
 	}{
 		{
-			name:          "Single AWS region",
-			content:       `region = "us-east-1"`,
+			name:          "New AWS region (af-south-1)", // Cape Town
+			content:       `region = "af-south-1"`,
 			expectedCount: 1,
 		},
 		{
-			name:          "Multiple AWS regions",
-			content:       `region = "us-east-1"\nbackup_region = "eu-west-1"`,
-			expectedCount: 2,
-		},
-		{
-			name:          "No regions",
-			content:       `const x = 42;`,
-			expectedCount: 0,
-		},
-		{
-			name:          "GCP region",
-			content:       `location = "us-central1"`,
+			name:          "New GCP region (southamerica-east1)",
+			content:       `location = "southamerica-east1"`,
 			expectedCount: 1,
+		},
+		{
+			name:          "New Azure region (switzerlandnorth)",
+			content:       `location = "switzerlandnorth"`,
+			expectedCount: 1,
+		},
+		{
+			name:          "Multiple mixed regions",
+			content:       `"us-east-1", "europe-west1", "japaneast"`,
+			expectedCount: 3,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			signals := &RepoSignals{
-				IntSignals: make(map[string]int),
+				IntSignals:      make(map[string]int),
+				DetectedRegions: make(map[string]bool),
 			}
 			detectRegions(tt.content, "test.tf", signals)
 
