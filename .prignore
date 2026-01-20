@@ -1,6 +1,7 @@
 *.yaml
 *_test.go
 detectors*.go
+patterns*.go
 docs/
 README.md
 LICENSE

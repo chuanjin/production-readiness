@@ -2,6 +2,8 @@ package scanner
 
 import (
 	"strings"
+
+	"github.com/chuanjin/production-readiness/internal/patterns"
 )
 
 // detectArtifactVersioning checks for versioned artifact patterns
@@ -13,7 +15,7 @@ func detectArtifactVersioning(content, relPath string, signals *RepoSignals) {
 	contentLower := strings.ToLower(content)
 
 	// Check for mutable tags first (anti-pattern)
-	mutableTags := []string{":latest", ":main", ":master", ":dev", ":develop"}
+	mutableTags := patterns.MutableTags
 	for _, tag := range mutableTags {
 		if strings.Contains(contentLower, tag) {
 			// Found mutable tag - not versioned
@@ -22,25 +24,8 @@ func detectArtifactVersioning(content, relPath string, signals *RepoSignals) {
 	}
 
 	// Look for versioning patterns
-	versioningPatterns := []string{
-		// Semantic versioning
-		":v1", ":v2", "version:", "tag:",
-
-		// Git tags
-		"git tag", "github.ref", "git.tag",
-
-		// Semantic versioning tools
-		"semver", "semantic-release",
-
-		// Docker image versioning
-		"@sha256:", "sha-", ":build-", ":release-",
-
-		// Container registries with versions
-		"gcr.io", "ecr.aws", "quay.io", "ghcr.io",
-
-		// Version variables
-		"$version", "${version}", "{{version}}",
-	}
+	// Look for versioning patterns
+	versioningPatterns := patterns.VersioningPatterns
 
 	for _, pattern := range versioningPatterns {
 		if strings.Contains(contentLower, pattern) {
@@ -56,13 +41,7 @@ func detectHealthEndpoints(content, relPath string, signals *RepoSignals) {
 
 	// Detect /health endpoint
 	if signals.StringSignals["http_endpoint"] == "" {
-		healthPatterns := []string{
-			"/health", "\"/health\"", "'/health'",
-			"healthcheck", "health-check",
-			"endpoint: /health", "path: /health",
-			"route('/health')", "get('/health')",
-			"@get(\"/health\")", "@route(\"/health\")",
-		}
+		healthPatterns := patterns.HealthPatterns
 
 		for _, pattern := range healthPatterns {
 			if strings.Contains(contentLower, pattern) {
@@ -74,13 +53,7 @@ func detectHealthEndpoints(content, relPath string, signals *RepoSignals) {
 
 	// Detect /ready or /readiness endpoint
 	if signals.StringSignals["http_endpoint"] == "" {
-		readyPatterns := []string{
-			"/ready", "\"/ready\"", "'/ready'",
-			"/readiness", "/readyz",
-			"endpoint: /ready", "path: /ready",
-			"route('/ready')", "get('/ready')",
-			"@get(\"/ready\")", "@route(\"/ready\")",
-		}
+		readyPatterns := patterns.ReadyPatterns
 
 		for _, pattern := range readyPatterns {
 			if strings.Contains(contentLower, pattern) {
@@ -99,32 +72,7 @@ func detectCorrelationID(content, relPath string, signals *RepoSignals) {
 
 	contentLower := strings.ToLower(content)
 
-	correlationPatterns := []string{
-		// Common correlation ID names
-		"correlation-id", "correlationid", "correlation_id",
-		"x-correlation-id", "x-request-id", "x-trace-id",
-
-		// Request ID (similar concept)
-		"request-id", "requestid", "request_id",
-
-		// Trace ID (from distributed tracing)
-		"trace-id", "traceid", "trace_id", "traceparent",
-
-		// OpenTelemetry
-		"opentelemetry", "otel", "trace.traceid",
-
-		// Specific tracing libraries
-		"jaeger", "zipkin", "datadog.trace",
-
-		// AWS X-Ray
-		"x-amzn-trace-id", "xray",
-
-		// Context propagation
-		"propagate", "baggage", "context.context",
-
-		// Logging with correlation
-		"logger.with", "log.with", "withfield",
-	}
+	correlationPatterns := patterns.CorrelationPatterns
 
 	for _, pattern := range correlationPatterns {
 		if strings.Contains(contentLower, pattern) {
@@ -142,40 +90,7 @@ func detectStructuredLogging(content, relPath string, signals *RepoSignals) {
 
 	contentLower := strings.ToLower(content)
 
-	structuredLoggingPatterns := []string{
-		// Go libraries
-		"logrus", "zap", "zerolog", "slog",
-
-		// Python libraries
-		"structlog", "python-json-logger", "pythonjsonlogger",
-
-		// JavaScript/TypeScript
-		"winston", "pino", "bunyan",
-
-		// Java libraries
-		"logback", "log4j2", "slf4j",
-
-		// .NET libraries
-		"serilog", "nlog",
-
-		// Ruby libraries
-		"semantic_logger", "ougai",
-
-		// Structured logging patterns
-		"log.info", "log.error", "log.warn",
-		"logger.info", "logger.error", "logger.warn",
-		"withfields", "withfield", "with(", ".with(",
-
-		// JSON logging
-		"json.marshal", "json.dumps", "json.stringify",
-		"log format: json", "log_format=json", "format=\"json\"",
-
-		// Key-value pairs in logs
-		"fields{", "fields:", "attributes{", "context{",
-
-		// ECS (Elastic Common Schema)
-		"ecs-logging",
-	}
+	structuredLoggingPatterns := patterns.StructuredLoggingPatterns
 
 	matchCount := 0
 	for _, pattern := range structuredLoggingPatterns {
@@ -191,11 +106,7 @@ func detectStructuredLogging(content, relPath string, signals *RepoSignals) {
 	}
 
 	// Single strong indicator is enough
-	strongIndicators := []string{
-		"structlog", "logrus", "zerolog", "slog", "zap",
-		"winston", "pino", "bunyan",
-		"serilog", "ecs-logging",
-	}
+	strongIndicators := patterns.StrongStructuredLoggingIndicators
 
 	for _, pattern := range strongIndicators {
 		if strings.Contains(contentLower, pattern) {

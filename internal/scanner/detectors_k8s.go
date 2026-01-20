@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/chuanjin/production-readiness/internal/patterns"
 )
 
 // detectK8sDeploymentStrategy checks Kubernetes deployment files for strategy
@@ -62,11 +64,7 @@ func detectK8sProbes(content, relPath string, signals *RepoSignals) {
 	}
 
 	// Look for probes in Pod, Deployment, StatefulSet, DaemonSet, etc.
-	validKinds := map[string]bool{
-		"Pod": true, "Deployment": true, "StatefulSet": true,
-		"DaemonSet": true, "Job": true, "CronJob": true,
-		"ReplicaSet": true,
-	}
+	validKinds := patterns.K8sValidKinds
 
 	if !validKinds[kind] {
 		return
@@ -132,19 +130,7 @@ func detectIngressRateLimit(content, relPath string, signals *RepoSignals) {
 	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
 		if annotations, ok := metadata["annotations"].(map[string]interface{}); ok {
 			// NGINX Ingress rate limiting annotations
-			rateLimitAnnotations := []string{
-				"nginx.ingress.kubernetes.io/limit-rps",
-				"nginx.ingress.kubernetes.io/limit-rpm",
-				"nginx.ingress.kubernetes.io/limit-connections",
-				"nginx.ingress.kubernetes.io/limit-burst-multiplier",
-
-				// Traefik rate limiting
-				"traefik.ingress.kubernetes.io/rate-limit",
-
-				// Kong rate limiting
-				"konghq.com/plugins",
-				"rate-limiting.plugin.konghq.com",
-			}
+			rateLimitAnnotations := patterns.NginxIngressRateLimitAnnotations
 
 			for _, annotation := range rateLimitAnnotations {
 				if _, exists := annotations[annotation]; exists {
@@ -186,11 +172,7 @@ func detectResourceLimits(content, relPath string, signals *RepoSignals) {
 		return
 	}
 
-	validKinds := map[string]bool{
-		"Pod": true, "Deployment": true, "StatefulSet": true,
-		"DaemonSet": true, "Job": true, "CronJob": true,
-		"ReplicaSet": true,
-	}
+	validKinds := patterns.K8sValidKinds
 
 	if !validKinds[kind] {
 		return

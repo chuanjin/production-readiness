@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/chuanjin/production-readiness/internal/patterns"
 )
 
 // detectAPIGatewayRateLimit checks for rate limiting in API Gateway configurations
@@ -16,40 +18,7 @@ func detectAPIGatewayRateLimit(content, relPath string, signals *RepoSignals) {
 	contentLower := strings.ToLower(content)
 
 	// Check for various API Gateway rate limiting patterns
-	rateLimitPatterns := []string{
-		// AWS API Gateway
-		"throttlesettings", "throttle", "ratelimit", "burstlimit",
-		"aws::apigateway", "usage plan", "usageplan",
-
-		// Kong
-		"rate-limiting", "rate_limiting", "kong-plugin-rate-limiting",
-
-		// Express (Node.js)
-		"express-rate-limit", "rate-limiter", "ratelimit(",
-
-		// Go libraries
-		"golang.org/x/time/rate", "rate.limiter", "ratelimit.new",
-		"throttled", "tollbooth",
-
-		// Python libraries
-		"flask-limiter", "django-ratelimit", "slowapi",
-
-		// Redis rate limiting
-		"redis-rate-limit", "redis:incr", "redis.incr",
-
-		// NGINX rate limiting
-		"limit_req", "limit_conn", "limit_rate",
-
-		// Envoy rate limiting
-		"envoy.filters.http.ratelimit", "rate_limit_service",
-
-		// Cloud provider rate limiting
-		"cloudfront.ratelimit", "azure.ratelimit",
-
-		// Generic patterns
-		"requests per second", "requests per minute",
-		"max_requests", "rate_limit", "throttle_rate",
-	}
+	rateLimitPatterns := patterns.APIGatewayRateLimitPatterns
 
 	for _, pattern := range rateLimitPatterns {
 		if strings.Contains(contentLower, pattern) {
@@ -111,32 +80,7 @@ func detectSLOConfig(content, relPath string, signals *RepoSignals) {
 
 	contentLower := strings.ToLower(content)
 
-	sloPatterns := []string{
-		// SLO/SLI keywords
-		"slo:", "sli:", "service level objective", "service level indicator",
-		"slo_config", "slo-config", "sloconfig",
-
-		// OpenSLO format
-		"openslo", "kind: slo", "apiversion: openslo",
-
-		// Prometheus-based SLO
-		"sloth", "pyrra", "slo-libsonnet",
-
-		// Cloud provider SLO
-		"google_monitoring_slo", "aws_servicelevelobjective",
-		"azurerm_monitor_slo",
-
-		// SLO metrics
-		"availability_slo", "latency_slo", "error_rate_slo",
-		"slo_target", "slo_threshold", "objective:",
-
-		// SLO tools
-		"nobl9", "lightstep", "datadog slo",
-
-		// Common SLO patterns
-		"99.9%", "99.95%", "99.99%", "four nines", "three nines",
-		"uptime_target", "availability_target",
-	}
+	sloPatterns := patterns.SLOPatterns
 
 	matchCount := 0
 	for _, pattern := range sloPatterns {
@@ -220,31 +164,7 @@ func detectErrorBudget(content, relPath string, signals *RepoSignals) {
 
 	contentLower := strings.ToLower(content)
 
-	errorBudgetPatterns := []string{
-		// Error budget keywords
-		"error_budget", "error-budget", "errorbudget",
-		"error budget", "budget:",
-
-		// Error budget policies
-		"error_budget_policy", "budget_policy", "burn_rate",
-		"burnrate", "burn-rate",
-
-		// Error budget calculation
-		"remaining_budget", "budget_remaining", "budget_spent",
-		"budget_consumption", "error_rate_threshold",
-
-		// Alerting based on error budget
-		"error_budget_alert", "budget_exhausted", "budget_burn",
-
-		// SRE tools with error budgets
-		"sloth", "pyrra", "nobl9", "openslo",
-
-		// Prometheus error budget queries
-		"error_budget{", "slo_error_budget",
-
-		// Cloud provider error budgets
-		"google_monitoring_slo", "consumed_budget",
-	}
+	errorBudgetPatterns := patterns.ErrorBudgetPatterns
 
 	for _, pattern := range errorBudgetPatterns {
 		if strings.Contains(contentLower, pattern) {
