@@ -14,13 +14,23 @@ func detectManualSteps(content, relPath string, signals *RepoSignals) {
 
 	// Only check documentation files
 	fileName := strings.ToLower(relPath)
-	isDocFile := strings.Contains(fileName, "readme") ||
-		strings.Contains(fileName, "doc") ||
-		strings.Contains(fileName, "deploy") ||
-		strings.Contains(fileName, "setup") ||
-		strings.Contains(fileName, "install") ||
-		strings.HasSuffix(fileName, ".md") ||
-		strings.HasSuffix(fileName, ".txt")
+
+	isDocFile := false
+	for _, keyword := range patterns.DocFileKeywords {
+		if strings.Contains(fileName, keyword) {
+			isDocFile = true
+			break
+		}
+	}
+
+	if !isDocFile {
+		for _, ext := range patterns.DocFileExtensions {
+			if strings.HasSuffix(fileName, ext) {
+				isDocFile = true
+				break
+			}
+		}
+	}
 
 	if !isDocFile {
 		return

@@ -47,10 +47,7 @@ func checkYAMLForRateLimit(obj interface{}) bool {
 	switch v := obj.(type) {
 	case map[string]interface{}:
 		// Check for rate limit keys
-		rateLimitKeys := []string{
-			"ratelimit", "rate_limit", "rate-limit",
-			"throttle", "quota", "limit",
-		}
+		rateLimitKeys := patterns.RateLimitYAMLKeys
 		for _, key := range rateLimitKeys {
 			if _, exists := v[key]; exists {
 				return true
@@ -127,11 +124,7 @@ func checkYAMLForSLO(obj interface{}) bool {
 	switch v := obj.(type) {
 	case map[string]interface{}:
 		// Check for SLO-related keys
-		sloKeys := []string{
-			"slo", "sli", "objective", "objectives",
-			"service_level_objective", "service_level_indicator",
-			"target", "availability", "latency_target",
-		}
+		sloKeys := patterns.SLOYAMLKeys
 		for _, key := range sloKeys {
 			lowerKey := strings.ToLower(key)
 			for k := range v {
@@ -192,10 +185,7 @@ func checkYAMLForErrorBudget(obj interface{}) bool {
 	switch v := obj.(type) {
 	case map[string]interface{}:
 		// Check for error budget keys
-		budgetKeys := []string{
-			"error_budget", "errorbudget", "error-budget",
-			"budget", "burn_rate", "burnrate",
-		}
+		budgetKeys := patterns.ErrorBudgetYAMLKeys
 		for _, key := range budgetKeys {
 			lowerKey := strings.ToLower(key)
 			for k := range v {

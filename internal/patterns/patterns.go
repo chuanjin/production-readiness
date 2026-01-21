@@ -419,3 +419,32 @@ var NginxIngressRateLimitAnnotations = []string{
 	"konghq.com/plugins",
 	"rate-limiting.plugin.konghq.com",
 }
+
+// RateLimitYAMLKeys for discovering rate limits in YAML
+var RateLimitYAMLKeys = []string{
+	"ratelimit", "rate_limit", "rate-limit",
+	"throttle", "quota", "limit",
+}
+
+// SLOYAMLKeys for discovering SLOs in YAML
+var SLOYAMLKeys = []string{
+	"slo", "sli", "objective", "objectives",
+	"service_level_objective", "service_level_indicator",
+	"target", "availability", "latency_target",
+}
+
+// ErrorBudgetYAMLKeys for discovering error budgets in YAML
+var ErrorBudgetYAMLKeys = []string{
+	"error_budget", "errorbudget", "error-budget",
+	"budget", "burn_rate", "burnrate",
+}
+
+// DocFileKeywords for identifying documentation files
+var DocFileKeywords = []string{
+	"readme", "doc", "deploy", "setup", "install",
+}
+
+// DocFileExtensions for identifying documentation files
+var DocFileExtensions = []string{
+	".md", ".txt",
+}
