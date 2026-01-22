@@ -128,5 +128,11 @@ func JSON(summary engine.Summary, findings []engine.Finding, signals *scanner.Re
 
 // JSONCompact generates a compact JSON report (no signals, no passed rules)
 func JSONCompact(summary engine.Summary, findings []engine.Finding) (string, error) {
-	return JSON(summary, findings, nil)
+	var triggeredFindings []engine.Finding
+	for i := range findings {
+		if findings[i].Triggered {
+			triggeredFindings = append(triggeredFindings, findings[i])
+		}
+	}
+	return JSON(summary, triggeredFindings, nil)
 }

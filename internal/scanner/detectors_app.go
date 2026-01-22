@@ -24,7 +24,6 @@ func detectArtifactVersioning(content, relPath string, signals *RepoSignals) {
 	}
 
 	// Look for versioning patterns
-	// Look for versioning patterns
 	versioningPatterns := patterns.VersioningPatterns
 
 	for _, pattern := range versioningPatterns {
