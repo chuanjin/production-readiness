@@ -116,6 +116,68 @@ func TestDetectAPIGatewayRateLimit(t *testing.T) {
 	}
 }
 
+func TestCheckYAMLForSLO(t *testing.T) {
+	tests := []struct {
+		name     string
+		yaml     string
+		expected bool
+	}{
+		{
+			name: "SLO key exists",
+			yaml: `
+slo: 99.9
+`,
+			expected: true,
+		},
+		{
+			name: "Nested SLO key",
+			yaml: `
+monitoring:
+  objective: 99.9
+`,
+			expected: true,
+		},
+		{
+			name: "List with SLO key",
+			yaml: `
+rules:
+  - name: my-rule
+    slo: 99.9
+`,
+			expected: true,
+		},
+		{
+			name: "No SLO",
+			yaml: `
+name: my-service
+port: 8080
+`,
+			expected: false,
+		},
+		{
+			name: "Case insensitive",
+			yaml: `
+SLO: 99.9
+`,
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var doc interface{}
+			err := yaml.Unmarshal([]byte(tt.yaml), &doc)
+			if err != nil {
+				t.Fatalf("failed to unmarshal yaml: %v", err)
+			}
+			result := checkYAMLForSLO(doc)
+			if result != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
+
 func TestDetectSLOConfig(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -125,7 +187,7 @@ func TestDetectSLOConfig(t *testing.T) {
 	}{
 		{
 			name:     "OpenSLO kind",
-			content:  `kind: SLO\napiVersion: openslo/v1`,
+			content:  "kind: SLO\napiVersion: openslo/v1",
 			path:     "slo.yaml",
 			expected: true,
 		},
@@ -136,14 +198,16 @@ func TestDetectSLOConfig(t *testing.T) {
 			expected: true,
 		},
 		{
-			name:     "YAML structure SLO",
-			content:  `monitoring:\n  slo:\n    availability: 99.9`,
+			name: "YAML structure SLO",
+			content: `monitoring:
+  slo:
+    availability: 99.9`,
 			path:     "monitor.yaml",
 			expected: true,
 		},
 		{
 			name:     "No SLO",
-			content:  `apiVersion: v1\nkind: Pod`,
+			content:  "apiVersion: v1\nkind: Pod",
 			path:     "pod.yaml",
 			expected: false,
 		},
@@ -183,8 +247,10 @@ func TestDetectErrorBudget(t *testing.T) {
 			expected: true,
 		},
 		{
-			name:     "YAML structure error budget",
-			content:  `monitoring:\n  budget:\n    burnrate: 14.4`,
+			name: "YAML structure error budget",
+			content: `monitoring:
+  budget:
+    burnrate: 14.4`,
 			path:     "monitor.yaml",
 			expected: true,
 		},
