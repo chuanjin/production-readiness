@@ -63,12 +63,20 @@ var scanCmd = &cobra.Command{
 		summary := engine.Summarize(findings)
 
 		// 4️⃣ output
+		var outStr string
+		var errOut error
 		switch format {
 		case "json":
-			fmt.Println(output.JSON(summary, findings, &signals))
+			outStr, errOut = output.JSON(summary, findings, &signals)
 		default:
-			fmt.Println(output.Markdown(summary, findings, &signals))
+			outStr = output.Markdown(summary, findings, &signals)
 		}
+
+		if errOut != nil {
+			fmt.Fprintln(cmd.OutOrStdout(), "Error generating output:", errOut)
+			return
+		}
+		fmt.Fprintln(cmd.OutOrStdout(), outStr)
 	},
 }
 
