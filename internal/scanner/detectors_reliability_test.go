@@ -100,6 +100,24 @@ func TestDetectAPIGatewayRateLimit(t *testing.T) {
 			path:     "config.yaml",
 			expected: true,
 		},
+		{
+			name:     "Invalid YAML content",
+			content:  `invalid: yaml: content: [[[`,
+			path:     "config.yaml",
+			expected: false,
+		},
+		{
+			name:     "Already detected signal",
+			content:  `rate_limit: 100`,
+			path:     "config.yaml",
+			expected: true,
+		},
+		{
+			name:     "Nested YAML rate limit",
+			content:  `api:\n  gateway:\n    throttle:\n      enabled: true`,
+			path:     "gateway.yml",
+			expected: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -114,6 +132,18 @@ func TestDetectAPIGatewayRateLimit(t *testing.T) {
 			}
 		})
 	}
+
+	// Test early return when signal already detected
+	t.Run("Early return when already detected", func(t *testing.T) {
+		signals := &RepoSignals{
+			BoolSignals: map[string]bool{"api_gateway_rate_limit": true},
+		}
+		detectAPIGatewayRateLimit("rate_limit: 200", "config.yaml", signals)
+		// Should still be true, function returns early
+		if !signals.BoolSignals["api_gateway_rate_limit"] {
+			t.Error("expected signal to remain true")
+		}
+	})
 }
 
 func TestCheckYAMLForSLO(t *testing.T) {
@@ -211,6 +241,30 @@ func TestDetectSLOConfig(t *testing.T) {
 			path:     "pod.yaml",
 			expected: false,
 		},
+		{
+			name:     "Weak indicators - multiple matches",
+			content:  `99.9% availability four nines`,
+			path:     "config.yaml",
+			expected: true,
+		},
+		{
+			name:     "Weak indicators - single match",
+			content:  `99.9% uptime`,
+			path:     "config.yaml",
+			expected: false,
+		},
+		{
+			name:     "ServiceLevelObjective kind",
+			content:  "kind: ServiceLevelObjective\napiVersion: openslo/v1",
+			path:     "slo.yaml",
+			expected: true,
+		},
+		{
+			name:     "Invalid YAML content",
+			content:  `invalid: yaml: [[[`,
+			path:     "config.yaml",
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -225,6 +279,18 @@ func TestDetectSLOConfig(t *testing.T) {
 			}
 		})
 	}
+
+	// Test early return when signal already detected
+	t.Run("Early return when already detected", func(t *testing.T) {
+		signals := &RepoSignals{
+			BoolSignals: map[string]bool{"slo_config_detected": true},
+		}
+		detectSLOConfig("service level objective: 99.9%", "readme.md", signals)
+		// Should still be true, function returns early
+		if !signals.BoolSignals["slo_config_detected"] {
+			t.Error("expected signal to remain true")
+		}
+	})
 }
 
 func TestDetectErrorBudget(t *testing.T) {
@@ -260,6 +326,12 @@ func TestDetectErrorBudget(t *testing.T) {
 			path:     "config.yaml",
 			expected: false,
 		},
+		{
+			name:     "Invalid YAML content",
+			content:  `invalid: yaml: [[[`,
+			path:     "config.yaml",
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -271,6 +343,85 @@ func TestDetectErrorBudget(t *testing.T) {
 
 			if signals.BoolSignals["error_budget_detected"] != tt.expected {
 				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["error_budget_detected"])
+			}
+		})
+	}
+
+	// Test early return when signal already detected
+	t.Run("Early return when already detected", func(t *testing.T) {
+		signals := &RepoSignals{
+			BoolSignals: map[string]bool{"error_budget_detected": true},
+		}
+		detectErrorBudget("error_budget: 0.1%", "config.yaml", signals)
+		// Should still be true, function returns early
+		if !signals.BoolSignals["error_budget_detected"] {
+			t.Error("expected signal to remain true")
+		}
+	})
+}
+
+func TestCheckYAMLForErrorBudget(t *testing.T) {
+	tests := []struct {
+		name     string
+		yaml     string
+		expected bool
+	}{
+		{
+			name: "Error budget key exists",
+			yaml: `
+errorbudget: 0.1
+`,
+			expected: true,
+		},
+		{
+			name: "Nested error budget key",
+			yaml: `
+monitoring:
+  budget:
+    burnrate: 14.4
+`,
+			expected: true,
+		},
+		{
+			name: "List with error budget key",
+			yaml: `
+alerts:
+  - name: my-alert
+    burnrate: 10
+`,
+			expected: true,
+		},
+		{
+			name: "Deeply nested array",
+			yaml: `
+services:
+  - name: api
+    monitoring:
+      - type: slo
+        errorbudget: 0.1
+`,
+			expected: true,
+		},
+		{
+			name: "No error budget",
+			yaml: `
+name: my-service
+port: 8080
+`,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var doc interface{}
+			err := yaml.Unmarshal([]byte(tt.yaml), &doc)
+			if err != nil {
+				t.Fatalf("failed to unmarshal yaml: %v", err)
+			}
+			result := checkYAMLForErrorBudget(doc)
+			if result != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result)
 			}
 		})
 	}

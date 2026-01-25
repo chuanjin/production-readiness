@@ -124,6 +124,38 @@ metadata:
 			relPath:  "service.yaml",
 			expected: false,
 		},
+		{
+			name: "Invalid YAML content",
+			content: `
+invalid: yaml: [[[
+`,
+			relPath:  "ingress.yaml",
+			expected: false,
+		},
+		{
+			name: "Ingress without metadata",
+			content: `
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+spec:
+  rules: []
+`,
+			relPath:  "ingress.yaml",
+			expected: false,
+		},
+		{
+			name: "Ingress without annotations",
+			content: `
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: simple-ingress
+spec:
+  rules: []
+`,
+			relPath:  "ingress.yaml",
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -138,6 +170,25 @@ metadata:
 			}
 		})
 	}
+
+	// Test early return when signal already detected
+	t.Run("Early return when already detected", func(t *testing.T) {
+		signals := &RepoSignals{
+			BoolSignals: map[string]bool{"ingress_rate_limit": true},
+		}
+		content := `
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+`
+		detectIngressRateLimit(content, "ingress.yaml", signals)
+		// Should still be true, function returns early
+		if !signals.BoolSignals["ingress_rate_limit"] {
+			t.Error("expected signal to remain true")
+		}
+	})
 }
 
 func TestDetectK8sProbes(t *testing.T) {

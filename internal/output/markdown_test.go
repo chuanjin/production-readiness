@@ -106,3 +106,152 @@ func TestMarkdownSummary(t *testing.T) {
 		}
 	}
 }
+
+func TestMarkdownSummaryWithIssues(t *testing.T) {
+	summary := engine.Summary{
+		Score:     65,
+		Total:     5,
+		Passed:    2,
+		Triggered: 3,
+		High:      1,
+		Medium:    1,
+		Low:       1,
+	}
+
+	findings := []engine.Finding{
+		{
+			Triggered: true,
+			Rule: rules.Rule{
+				ID:       "TEST-001",
+				Title:    "High Issue",
+				Severity: rules.High,
+			},
+		},
+		{
+			Triggered: true,
+			Rule: rules.Rule{
+				ID:       "TEST-002",
+				Title:    "Medium Issue",
+				Severity: rules.Medium,
+			},
+		},
+		{
+			Triggered: true,
+			Rule: rules.Rule{
+				ID:       "TEST-003",
+				Title:    "Low Issue",
+				Severity: rules.Low,
+			},
+		},
+		{
+			Triggered: false,
+			Rule: rules.Rule{
+				ID:       "TEST-004",
+				Severity: rules.Medium,
+			},
+		},
+		{
+			Triggered: false,
+			Rule: rules.Rule{
+				ID:       "TEST-005",
+				Severity: rules.Low,
+			},
+		},
+	}
+
+	output := MarkdownSummary(summary, findings)
+
+	checks := []string{
+		"# Production Readiness Summary",
+		"**Score: 65 / 100**",
+		"## Issues Found",
+		"🔴 **High:** 1 issues",
+		"🟠 **Medium:** 1 issues",
+		"🟡 **Low:** 1 issues",
+	}
+
+	for _, check := range checks {
+		if !strings.Contains(output, check) {
+			t.Errorf("MarkdownSummary output missing: %q", check)
+		}
+	}
+
+	// Should not contain "No issues found"
+	if strings.Contains(output, "No issues found") {
+		t.Error("MarkdownSummary should not contain 'No issues found' when there are issues")
+	}
+}
+
+func TestMarkdownSummaryEdgeCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		summary  engine.Summary
+		findings []engine.Finding
+		contains []string
+	}{
+		{
+			name: "Only high severity issues",
+			summary: engine.Summary{
+				Score:     60,
+				Total:     3,
+				Passed:    1,
+				Triggered: 2,
+				High:      2,
+			},
+			findings: []engine.Finding{
+				{Triggered: true, Rule: rules.Rule{Severity: rules.High}},
+				{Triggered: true, Rule: rules.Rule{Severity: rules.High}},
+				{Triggered: false, Rule: rules.Rule{Severity: rules.Medium}},
+			},
+			contains: []string{
+				"🔴 **High:** 2 issues",
+			},
+		},
+		{
+			name: "Only medium severity issues",
+			summary: engine.Summary{
+				Score:     70,
+				Total:     2,
+				Passed:    1,
+				Triggered: 1,
+				Medium:    1,
+			},
+			findings: []engine.Finding{
+				{Triggered: true, Rule: rules.Rule{Severity: rules.Medium}},
+				{Triggered: false, Rule: rules.Rule{Severity: rules.Low}},
+			},
+			contains: []string{
+				"🟠 **Medium:** 1 issues",
+			},
+		},
+		{
+			name: "Only low severity issues",
+			summary: engine.Summary{
+				Score:     85,
+				Total:     2,
+				Passed:    1,
+				Triggered: 1,
+				Low:       1,
+			},
+			findings: []engine.Finding{
+				{Triggered: true, Rule: rules.Rule{Severity: rules.Low}},
+				{Triggered: false, Rule: rules.Rule{Severity: rules.Medium}},
+			},
+			contains: []string{
+				"🟡 **Low:** 1 issues",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output := MarkdownSummary(tt.summary, tt.findings)
+
+			for _, check := range tt.contains {
+				if !strings.Contains(output, check) {
+					t.Errorf("MarkdownSummary output missing: %q", check)
+				}
+			}
+		})
+	}
+}
