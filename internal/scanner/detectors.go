@@ -20,6 +20,7 @@ func init() {
 	registerDetector(detectAPIGatewayRateLimit)
 	registerDetector(detectSLOConfig)
 	registerDetector(detectErrorBudget)
+	registerDetector(detectTimeoutConfiguration)
 
 	registerDetector(detectManualSteps)
 	registerDetector(detectMigrationTool)

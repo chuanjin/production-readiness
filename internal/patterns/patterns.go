@@ -439,6 +439,68 @@ var ErrorBudgetYAMLKeys = []string{
 	"budget", "burn_rate", "burnrate",
 }
 
+// TimeoutPatterns checks for timeout configurations in code
+var TimeoutPatterns = []string{
+	// Go HTTP client timeouts (more specific patterns)
+	"client.timeout", "timeout:", "context.withtimeout",
+	"context.withdeadline", "time.after(", "time.newtimer(",
+	"dialtimeout", "tlshandshaketimeout", "responseheadertimeout",
+	"idleconntimeout", "expectcontinuetimeout",
+
+	// Go database timeouts
+	"db.setconnmaxlifetime", "db.setmaxidleconns", "connecttimeout",
+	"readtimeout", "writetimeout", "statement_timeout",
+
+	// Python HTTP timeouts
+	"requests.get(", "requests.post(", "timeout=", "connect_timeout",
+	"read_timeout", "httpx.timeout", "aiohttp.clienttimeout",
+
+	// Python database timeouts
+	"connect_timeout", "command_timeout", "socket_timeout",
+	"pool_timeout", "query_timeout",
+
+	// Node.js/JavaScript timeouts
+	"axios.create", "timeout:", "httptimeout", "connectiontimeout",
+	"fetch(", "signal:", "abortcontroller", "settimeout(",
+
+	// Node.js database timeouts
+	"connectiontimeout", "querytimeout", "idletimeout",
+	"acquiretimeout", "pool.acquire",
+
+	// Java HTTP timeouts
+	"connecttimeout", "readtimeout", "httpclient.builder",
+	"setconnecttimeout", "setreadtimeout", "sockettimeout",
+
+	// Java database timeouts
+	"logintimeout", "querytimeout", "sockettimeout",
+	"connectiontimeout", "setlogintimeout",
+
+	// .NET timeouts
+	"httpclient.timeout", "commandtimeout", "connectiontimeout",
+	"receivetimeout", "sendtimeout",
+
+	// gRPC timeouts
+	"grpc.withtimeout", "grpc_timeout", "deadline",
+	"calloptions.withtimeout", "context.deadline",
+
+	// Redis timeouts
+	"dialtimeout", "readtimeout", "writetimeout", "pooltimeout",
+	"idletimeout", "idlechecktimeout",
+
+	// Generic timeout patterns
+	"timeout", "deadline", "ttl", "max_wait", "wait_timeout",
+	"execution_timeout", "request_timeout", "operation_timeout",
+}
+
+// TimeoutConfigKeys for discovering timeouts in YAML/JSON config
+var TimeoutConfigKeys = []string{
+	"timeout", "timeouts", "deadline", "ttl",
+	"connect_timeout", "read_timeout", "write_timeout",
+	"request_timeout", "response_timeout", "idle_timeout",
+	"connection_timeout", "query_timeout", "execution_timeout",
+	"max_wait_time", "wait_timeout", "operation_timeout",
+}
+
 // DocFileKeywords for identifying documentation files
 var DocFileKeywords = []string{
 	"readme", "doc", "deploy", "setup", "install",

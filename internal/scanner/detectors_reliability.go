@@ -209,3 +209,65 @@ func checkYAMLForErrorBudget(obj interface{}) bool {
 	}
 	return false
 }
+
+// detectTimeoutConfiguration checks for timeout configurations in code and config files
+func detectTimeoutConfiguration(content, relPath string, signals *RepoSignals) {
+	if signals.BoolSignals["timeout_configured"] {
+		return
+	}
+
+	contentLower := strings.ToLower(content)
+
+	// Check for timeout patterns in code
+	timeoutPatterns := patterns.TimeoutPatterns
+
+	for _, pattern := range timeoutPatterns {
+		if strings.Contains(contentLower, pattern) {
+			signals.BoolSignals["timeout_configured"] = true
+			return
+		}
+	}
+
+	// Also check YAML/JSON config files for timeout settings
+	ext := strings.ToLower(filepath.Ext(relPath))
+	if ext == ExtYAML || ext == ExtYML || ext == ".json" {
+		var doc map[string]interface{}
+		if err := yaml.Unmarshal([]byte(content), &doc); err != nil {
+			return
+		}
+
+		if checkYAMLForTimeout(doc) {
+			signals.BoolSignals["timeout_configured"] = true
+		}
+	}
+}
+
+// checkYAMLForTimeout recursively checks YAML for timeout configuration
+func checkYAMLForTimeout(obj interface{}) bool {
+	switch v := obj.(type) {
+	case map[string]interface{}:
+		// Check for timeout-related keys
+		timeoutKeys := patterns.TimeoutConfigKeys
+		for _, key := range timeoutKeys {
+			lowerKey := strings.ToLower(key)
+			for k := range v {
+				if strings.Contains(strings.ToLower(k), lowerKey) {
+					return true
+				}
+			}
+		}
+		// Recursively check nested objects
+		for _, value := range v {
+			if checkYAMLForTimeout(value) {
+				return true
+			}
+		}
+	case []interface{}:
+		for _, item := range v {
+			if checkYAMLForTimeout(item) {
+				return true
+			}
+		}
+	}
+	return false
+}

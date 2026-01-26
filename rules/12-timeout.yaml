@@ -1,0 +1,21 @@
+id: timeout-configuration
+severity: medium
+category: reliability
+title: No explicit timeout configuration detected
+
+description: >
+  No evidence of timeout configuration was found for network operations,
+  HTTP clients, or database connections.
+
+why_it_matters:
+  - Missing timeouts can cause resource exhaustion when dependencies are slow or unresponsive.
+  - Threads or connections may hang indefinitely, blocking other requests.
+  - Cascading failures occur when one slow service affects all callers.
+  - Recovery becomes difficult as resources are tied up waiting.
+
+detect:
+  none_of:
+    - signal_equals:
+        timeout_configured: true
+
+confidence: medium

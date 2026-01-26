@@ -426,3 +426,123 @@ port: 8080
 		})
 	}
 }
+
+func TestDetectTimeoutConfiguration(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		relPath  string
+		expected bool
+	}{
+		{
+			name: "Go HTTP client with timeout",
+			content: `
+				client := &http.Client{
+					Timeout: 30 * time.Second,
+				}
+			`,
+			relPath:  "main.go",
+			expected: true,
+		},
+		{
+			name: "Go context with timeout",
+			content: `
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+			`,
+			relPath:  "handler.go",
+			expected: true,
+		},
+		{
+			name: "Python requests with timeout",
+			content: `
+				response = requests.get('https://api.example.com', timeout=10)
+			`,
+			relPath:  "client.py",
+			expected: true,
+		},
+		{
+			name: "Node.js axios with timeout",
+			content: `
+				const client = axios.create({
+					timeout: 5000,
+					baseURL: 'https://api.example.com'
+				});
+			`,
+			relPath:  "client.js",
+			expected: true,
+		},
+		{
+			name: "Database connection with timeout",
+			content: `
+				db.SetConnMaxLifetime(time.Minute * 3)
+				db.SetMaxIdleConns(10)
+			`,
+			relPath:  "database.go",
+			expected: true,
+		},
+		{
+			name: "YAML config with timeout",
+			content: `
+				server:
+				  port: 8080
+				  timeout: 30s
+				  read_timeout: 10s
+			`,
+			relPath:  "config.yaml",
+			expected: true,
+		},
+		{
+			name: "gRPC with timeout",
+			content: `
+				ctx, cancel := context.WithDeadline(ctx, time.Now().Add(time.Second))
+				defer cancel()
+				response, err := client.GetUser(ctx, request)
+			`,
+			relPath:  "grpc_client.go",
+			expected: true,
+		},
+		{
+			name: "No timeout configuration",
+			content: `
+				client := &http.Client{}
+				resp, err := client.Get("https://api.example.com")
+			`,
+			relPath:  "main.go",
+			expected: false,
+		},
+		{
+			name: "Generic timeout keyword",
+			content: `
+				// Configure timeout for all operations
+				const operationTimeout = 30
+			`,
+			relPath:  "config.go",
+			expected: true,
+		},
+		{
+			name: "Java HTTP client timeout",
+			content: `
+				HttpClient client = HttpClient.newBuilder()
+					.connectTimeout(Duration.ofSeconds(10))
+					.build();
+			`,
+			relPath:  "Client.java",
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			signals := &RepoSignals{
+				BoolSignals:   make(map[string]bool),
+				StringSignals: make(map[string]string),
+			}
+			detectTimeoutConfiguration(tt.content, tt.relPath, signals)
+
+			if signals.BoolSignals["timeout_configured"] != tt.expected {
+				t.Errorf("Expected timeout_configured=%v, got %v", tt.expected, signals.BoolSignals["timeout_configured"])
+			}
+		})
+	}
+}
