@@ -132,6 +132,22 @@ not like a tool enforcing policy after failure.
 
 ---
 
+## Scope and non-goals
+
+This project focuses on surfacing deterministic, explainable signals about production risk that are visible from code, configuration, and deployment intent.
+
+It does not aim to:
+
+- enumerate all possible runtime failure states of a system
+- replace runtime testing, staging validation, or operational review
+- predict incidents or guarantee correctness
+- enforce best practices or auto-remediate changes
+
+Many production failures only emerge under real traffic, timing, dependency behavior, or human interaction. Those require empirical validation and operational judgment.
+This project is intentionally upstream of those activities and is meant to complement — not replace — existing engineering and operational practices.
+
+---
+
 ## How it works
 
 ### Install from source
@@ -201,8 +217,13 @@ Each finding includes:
 
 Rules live in rules/*.yaml and are fully open-source —
 you can read, modify, or PR new ones.
-Rules are intentionally opinionated.
-They reflect "what goes wrong in real world" rather than academia.
+
+Rules are intentionally opinionated,
+reflecting common real-world failure patterns rather than theoretical best practices.
+
+They are signals, not prescriptions.
+A rule firing highlights an explicit assumption or trade-off,
+not a required action or universal judgment.
 
 ---
 
