@@ -30,7 +30,7 @@ func TestEvaluateCondition(t *testing.T) {
 	tests := []struct {
 		name      string
 		condition interface{}
-		signals   scanner.RepoSignals
+		signals   *scanner.RepoSignals
 		expected  bool
 	}{
 		{
@@ -38,7 +38,7 @@ func TestEvaluateCondition(t *testing.T) {
 			condition: map[string]interface{}{
 				"file_exists": ".env",
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				Files: map[string]bool{
 					".env":    true,
 					"main.go": true,
@@ -51,7 +51,7 @@ func TestEvaluateCondition(t *testing.T) {
 			condition: map[string]interface{}{
 				"file_exists": ".env",
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				Files: map[string]bool{
 					"main.go": true,
 				},
@@ -63,7 +63,7 @@ func TestEvaluateCondition(t *testing.T) {
 			condition: map[string]interface{}{
 				"file_exists": "**/*.yaml",
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				Files: map[string]bool{
 					"configs/deployment.yaml": true,
 					"main.go":                 true,
@@ -76,7 +76,7 @@ func TestEvaluateCondition(t *testing.T) {
 			condition: map[string]interface{}{
 				"code_contains": "process.env",
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				FileContent: map[string]string{
 					"server.js": "const port = process.env.PORT",
 				},
@@ -88,7 +88,7 @@ func TestEvaluateCondition(t *testing.T) {
 			condition: map[string]interface{}{
 				"code_contains": "process.env",
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				FileContent: map[string]string{
 					"server.js": "const port = 3000",
 				},
@@ -102,7 +102,7 @@ func TestEvaluateCondition(t *testing.T) {
 					"secrets_provider_detected": true,
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				BoolSignals: map[string]bool{
 					"secrets_provider_detected": true,
 				},
@@ -116,7 +116,7 @@ func TestEvaluateCondition(t *testing.T) {
 					"secrets_provider_detected": false,
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				BoolSignals: map[string]bool{
 					"secrets_provider_detected": true,
 				},
@@ -130,7 +130,7 @@ func TestEvaluateCondition(t *testing.T) {
 					"secrets_provider_detected": false,
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				BoolSignals: map[string]bool{},
 			},
 			expected: true,
@@ -142,7 +142,7 @@ func TestEvaluateCondition(t *testing.T) {
 					"http_endpoint": "/health",
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				StringSignals: map[string]string{
 					"http_endpoint": "/health",
 				},
@@ -156,7 +156,7 @@ func TestEvaluateCondition(t *testing.T) {
 					"region_count": 1,
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				IntSignals: map[string]int{
 					"region_count": 1,
 				},
@@ -196,7 +196,7 @@ func TestEvaluateRule(t *testing.T) {
 	tests := []struct {
 		name     string
 		rule     rules.Rule
-		signals  scanner.RepoSignals
+		signals  *scanner.RepoSignals
 		expected bool
 	}{
 		{
@@ -213,7 +213,7 @@ func TestEvaluateRule(t *testing.T) {
 					},
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				BoolSignals: map[string]bool{
 					"secrets_provider_detected": false,
 				},
@@ -234,7 +234,7 @@ func TestEvaluateRule(t *testing.T) {
 					},
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				BoolSignals: map[string]bool{
 					"secrets_provider_detected": true,
 				},
@@ -260,7 +260,7 @@ func TestEvaluateRule(t *testing.T) {
 					},
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				BoolSignals: map[string]bool{
 					"infra_as_code_detected": true,
 				},
@@ -289,7 +289,7 @@ func TestEvaluateRule(t *testing.T) {
 					},
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				BoolSignals: map[string]bool{
 					"infra_as_code_detected": true,
 				},
@@ -314,7 +314,7 @@ func TestEvaluateRule(t *testing.T) {
 					},
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				Files: map[string]bool{
 					".env": true,
 				},
@@ -337,7 +337,7 @@ func TestEvaluateRule(t *testing.T) {
 					},
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				Files:       map[string]bool{},
 				FileContent: map[string]string{},
 			},
@@ -364,7 +364,7 @@ func TestEvaluateRule(t *testing.T) {
 					},
 				},
 			},
-			signals: scanner.RepoSignals{
+			signals: &scanner.RepoSignals{
 				BoolSignals: map[string]bool{
 					"migration_tool_detected":            true,
 					"backward_compatible_migration_hint": false,
@@ -434,7 +434,7 @@ func TestEvaluate(t *testing.T) {
 		},
 	}
 
-	signals := scanner.RepoSignals{
+	signals := &scanner.RepoSignals{
 		Files: map[string]bool{
 			".env": true,
 		},

@@ -67,9 +67,9 @@ var scanCmd = &cobra.Command{
 		var errOut error
 		switch format {
 		case "json":
-			outStr, errOut = output.JSON(summary, findings, &signals)
+			outStr, errOut = output.JSON(summary, findings, signals)
 		default:
-			outStr = output.Markdown(summary, findings, &signals)
+			outStr = output.Markdown(summary, findings, signals)
 		}
 
 		if errOut != nil {

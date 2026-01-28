@@ -8,7 +8,7 @@ import (
 
 // detectSecretsProvider checks if code uses secrets management services
 func detectSecretsProvider(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["secrets_provider_detected"] {
+	if signals.GetBool("secrets_provider_detected") {
 		return
 	}
 
@@ -17,7 +17,7 @@ func detectSecretsProvider(content, relPath string, signals *RepoSignals) {
 	contentLower := strings.ToLower(content)
 	for _, pattern := range secretsProviderPatterns {
 		if strings.Contains(contentLower, strings.ToLower(pattern)) {
-			signals.BoolSignals["secrets_provider_detected"] = true
+			signals.SetBool("secrets_provider_detected", true)
 			return
 		}
 	}
@@ -25,7 +25,7 @@ func detectSecretsProvider(content, relPath string, signals *RepoSignals) {
 
 // detectInfrastructure checks if IaC (Infrastructure as Code) is present
 func detectInfrastructure(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["infra_as_code_detected"] {
+	if signals.GetBool("infra_as_code_detected") {
 		return
 	}
 
@@ -35,7 +35,7 @@ func detectInfrastructure(content, relPath string, signals *RepoSignals) {
 
 	for _, pattern := range infraPatterns {
 		if strings.Contains(contentLower, pattern) {
-			signals.BoolSignals["infra_as_code_detected"] = true
+			signals.SetBool("infra_as_code_detected", true)
 			return
 		}
 	}
@@ -43,11 +43,6 @@ func detectInfrastructure(content, relPath string, signals *RepoSignals) {
 
 // detectRegions counts the number of unique cloud regions configured
 func detectRegions(content, relPath string, signals *RepoSignals) {
-	// Initialize if nil (defensive programming, though fs.go handles it)
-	if signals.DetectedRegions == nil {
-		signals.DetectedRegions = make(map[string]bool)
-	}
-
 	contentLower := strings.ToLower(content)
 
 	// AWS regions
@@ -63,10 +58,10 @@ func detectRegions(content, relPath string, signals *RepoSignals) {
 
 	for _, region := range allRegions {
 		if strings.Contains(contentLower, region) {
-			signals.DetectedRegions[region] = true
+			signals.SetRegion(region)
 		}
 	}
 
 	// Update the global count based on the accumulated unique regions
-	signals.IntSignals["region_count"] = len(signals.DetectedRegions)
+	signals.SetInt("region_count", signals.GetRegionCount())
 }

@@ -11,7 +11,7 @@ import (
 
 // detectAPIGatewayRateLimit checks for rate limiting in API Gateway configurations
 func detectAPIGatewayRateLimit(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["api_gateway_rate_limit"] {
+	if signals.GetBool("api_gateway_rate_limit") {
 		return
 	}
 
@@ -22,7 +22,7 @@ func detectAPIGatewayRateLimit(content, relPath string, signals *RepoSignals) {
 
 	for _, pattern := range rateLimitPatterns {
 		if strings.Contains(contentLower, pattern) {
-			signals.BoolSignals["api_gateway_rate_limit"] = true
+			signals.SetBool("api_gateway_rate_limit", true)
 			return
 		}
 	}
@@ -37,7 +37,7 @@ func detectAPIGatewayRateLimit(content, relPath string, signals *RepoSignals) {
 
 		// Check for rate limit in various gateway configs
 		if checkYAMLForRateLimit(doc) {
-			signals.BoolSignals["api_gateway_rate_limit"] = true
+			signals.SetBool("api_gateway_rate_limit", true)
 		}
 	}
 }
@@ -71,7 +71,7 @@ func checkYAMLForRateLimit(obj interface{}) bool {
 
 // detectSLOConfig checks for Service Level Objective configurations
 func detectSLOConfig(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["slo_config_detected"] {
+	if signals.GetBool("slo_config_detected") {
 		return
 	}
 
@@ -85,12 +85,12 @@ func detectSLOConfig(content, relPath string, signals *RepoSignals) {
 			matchCount++
 			// Strong indicators - single match is enough
 			if strings.Contains(pattern, "slo") || strings.Contains(pattern, "objective") {
-				signals.BoolSignals["slo_config_detected"] = true
+				signals.SetBool("slo_config_detected", true)
 				return
 			}
 			// Weak indicators - need multiple matches
 			if matchCount >= 2 {
-				signals.BoolSignals["slo_config_detected"] = true
+				signals.SetBool("slo_config_detected", true)
 				return
 			}
 		}
@@ -107,14 +107,14 @@ func detectSLOConfig(content, relPath string, signals *RepoSignals) {
 		// Check for OpenSLO format
 		if kind, ok := doc["kind"].(string); ok {
 			if strings.EqualFold(kind, "slo") || strings.EqualFold(kind, "servicelevelobjective") {
-				signals.BoolSignals["slo_config_detected"] = true
+				signals.SetBool("slo_config_detected", true)
 				return
 			}
 		}
 
 		// Check for SLO-related keys
 		if checkYAMLForSLO(doc) {
-			signals.BoolSignals["slo_config_detected"] = true
+			signals.SetBool("slo_config_detected", true)
 		}
 	}
 }
@@ -151,7 +151,7 @@ func checkYAMLForSLO(obj interface{}) bool {
 
 // detectErrorBudget checks for error budget configurations
 func detectErrorBudget(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["error_budget_detected"] {
+	if signals.GetBool("error_budget_detected") {
 		return
 	}
 
@@ -161,7 +161,7 @@ func detectErrorBudget(content, relPath string, signals *RepoSignals) {
 
 	for _, pattern := range errorBudgetPatterns {
 		if strings.Contains(contentLower, pattern) {
-			signals.BoolSignals["error_budget_detected"] = true
+			signals.SetBool("error_budget_detected", true)
 			return
 		}
 	}
@@ -175,7 +175,7 @@ func detectErrorBudget(content, relPath string, signals *RepoSignals) {
 		}
 
 		if checkYAMLForErrorBudget(doc) {
-			signals.BoolSignals["error_budget_detected"] = true
+			signals.SetBool("error_budget_detected", true)
 		}
 	}
 }
@@ -212,7 +212,7 @@ func checkYAMLForErrorBudget(obj interface{}) bool {
 
 // detectTimeoutConfiguration checks for timeout configurations in code and config files
 func detectTimeoutConfiguration(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["timeout_configured"] {
+	if signals.GetBool("timeout_configured") {
 		return
 	}
 
@@ -223,7 +223,7 @@ func detectTimeoutConfiguration(content, relPath string, signals *RepoSignals) {
 
 	for _, pattern := range timeoutPatterns {
 		if strings.Contains(contentLower, pattern) {
-			signals.BoolSignals["timeout_configured"] = true
+			signals.SetBool("timeout_configured", true)
 			return
 		}
 	}
@@ -237,7 +237,7 @@ func detectTimeoutConfiguration(content, relPath string, signals *RepoSignals) {
 		}
 
 		if checkYAMLForTimeout(doc) {
-			signals.BoolSignals["timeout_configured"] = true
+			signals.SetBool("timeout_configured", true)
 		}
 	}
 }

@@ -1,11 +1,14 @@
 package scanner
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
+	"golang.org/x/sync/errgroup"
 )
 
 // binaryExts are automatically skipped
@@ -42,7 +45,7 @@ func (n *NoopLogger) Printf(format string, v ...interface{}) {}
 func (n *NoopLogger) Println(v ...interface{})               {}
 
 // ScanRepo scans the repository with default options (no debug output)
-func ScanRepo(root string) (RepoSignals, error) {
+func ScanRepo(root string) (*RepoSignals, error) {
 	return ScanRepoWithOptions(root, ScanOptions{
 		Debug:  false,
 		Logger: &NoopLogger{},
@@ -50,8 +53,8 @@ func ScanRepo(root string) (RepoSignals, error) {
 }
 
 // ScanRepoWithOptions scans the repository with custom options
-func ScanRepoWithOptions(root string, opts ScanOptions) (RepoSignals, error) {
-	signals := RepoSignals{
+func ScanRepoWithOptions(root string, opts ScanOptions) (*RepoSignals, error) {
+	signals := &RepoSignals{
 		Files:           make(map[string]bool),
 		FileContent:     make(map[string]string),
 		BoolSignals:     make(map[string]bool),
@@ -76,29 +79,74 @@ func ScanRepoWithOptions(root string, opts ScanOptions) (RepoSignals, error) {
 		logger.Println("")
 	}
 
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
+	// Work channel for parallel processing
+	type scanWork struct {
+		path  string
+		entry os.DirEntry
+	}
+	workChan := make(chan scanWork, 100)
+
+	g, ctx := errgroup.WithContext(context.Background())
+
+	// Start worker pool
+	numWorkers := runtime.NumCPU() * 2
+	if numWorkers < 4 {
+		numWorkers = 4
+	}
+
+	for i := 0; i < numWorkers; i++ {
+		g.Go(func() error {
+			for {
+				select {
+				case work, ok := <-workChan:
+					if !ok {
+						return nil
+					}
+					if err := handleFile(work.path, root, work.entry, ignorePatterns, opts, signals); err != nil {
+						return err
+					}
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+		})
+	}
+
+	// Walk the filesystem and send work to workers
+	g.Go(func() error {
+		defer close(workChan)
+		return filepath.WalkDir(root, func(path string, info os.DirEntry, err error) error {
+			if err != nil {
+				return nil
+			}
+
+			// Validate path is within root to prevent traversal
+			if !strings.HasPrefix(path, root) {
+				return filepath.SkipDir
+			}
+
+			// Handle directories
+			if info.IsDir() {
+				return handleDir(path, root, info.Name(), ignorePatterns, opts.Debug, logger)
+			}
+
+			// Send file to work channel
+			select {
+			case workChan <- scanWork{path: path, entry: info}:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 			return nil
-		}
-
-		// Validate path is within root to prevent traversal
-		if !strings.HasPrefix(path, root) {
-			return filepath.SkipDir
-		}
-
-		// Handle directories
-		if info.IsDir() {
-			return handleDir(path, root, info.Name(), ignorePatterns, opts.Debug, logger)
-		}
-
-		// Handle files
-		return handleFile(path, root, info, ignorePatterns, opts, &signals)
+		})
 	})
+
+	err := g.Wait()
 
 	if opts.Debug {
 		logger.Println("\n=== Summary ===")
-		logger.Printf("Total files: %d", len(signals.Files))
-		logger.Printf("Files with content: %d", len(signals.FileContent))
+		// Using helper methods since maps are now protected by mutex
+		logger.Printf("Total files: %d", len(signals.GetFiles()))
+		logger.Printf("Files with content: %d", len(signals.GetFileContentMap()))
 	}
 
 	return signals, err

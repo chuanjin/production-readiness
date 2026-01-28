@@ -8,7 +8,7 @@ import (
 
 // detectManualSteps checks if documentation contains manual deployment steps
 func detectManualSteps(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["manual_steps_documented"] {
+	if signals.GetBool("manual_steps_documented") {
 		return
 	}
 
@@ -47,7 +47,7 @@ func detectManualSteps(content, relPath string, signals *RepoSignals) {
 		if strings.Contains(contentLower, pattern) {
 			matches++
 			if matches >= 3 { // Need at least 3 indicators
-				signals.BoolSignals["manual_steps_documented"] = true
+				signals.SetBool("manual_steps_documented", true)
 				return
 			}
 		}
@@ -56,7 +56,7 @@ func detectManualSteps(content, relPath string, signals *RepoSignals) {
 
 // detectMigrationTool checks for database migration tools
 func detectMigrationTool(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["migration_tool_detected"] {
+	if signals.GetBool("migration_tool_detected") {
 		return
 	}
 
@@ -66,7 +66,7 @@ func detectMigrationTool(content, relPath string, signals *RepoSignals) {
 
 	for _, pattern := range migrationToolPatterns {
 		if strings.Contains(contentLower, pattern) {
-			signals.BoolSignals["migration_tool_detected"] = true
+			signals.SetBool("migration_tool_detected", true)
 			return
 		}
 	}
@@ -74,7 +74,7 @@ func detectMigrationTool(content, relPath string, signals *RepoSignals) {
 
 // detectBackwardCompatibleMigration checks for backward compatibility hints
 func detectBackwardCompatibleMigration(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["backward_compatible_migration_hint"] {
+	if signals.GetBool("backward_compatible_migration_hint") {
 		return
 	}
 
@@ -90,12 +90,12 @@ func detectBackwardCompatibleMigration(content, relPath string, signals *RepoSig
 			if strings.Contains(pattern, "backward") ||
 				strings.Contains(pattern, "zero-downtime") ||
 				strings.Contains(pattern, "expand-contract") {
-				signals.BoolSignals["backward_compatible_migration_hint"] = true
+				signals.SetBool("backward_compatible_migration_hint", true)
 				return
 			}
 			// Weaker indicators - need multiple
 			if matchCount >= 2 {
-				signals.BoolSignals["backward_compatible_migration_hint"] = true
+				signals.SetBool("backward_compatible_migration_hint", true)
 				return
 			}
 		}
@@ -104,7 +104,7 @@ func detectBackwardCompatibleMigration(content, relPath string, signals *RepoSig
 
 // detectMigrationValidation checks for migration validation steps
 func detectMigrationValidation(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["migration_validation_step"] {
+	if signals.GetBool("migration_validation_step") {
 		return
 	}
 
@@ -121,12 +121,12 @@ func detectMigrationValidation(content, relPath string, signals *RepoSignals) {
 				strings.Contains(pattern, "test") ||
 				strings.Contains(pattern, "dry-run") ||
 				strings.Contains(pattern, "rollback") {
-				signals.BoolSignals["migration_validation_step"] = true
+				signals.SetBool("migration_validation_step", true)
 				return
 			}
 			// Weaker indicators - need multiple
 			if matchCount >= 2 {
-				signals.BoolSignals["migration_validation_step"] = true
+				signals.SetBool("migration_validation_step", true)
 				return
 			}
 		}

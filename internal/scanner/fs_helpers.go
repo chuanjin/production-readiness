@@ -27,7 +27,7 @@ func handleDir(path, root, name string, ignorePatterns []string, debug bool, log
 }
 
 // handleFile processes files during walk
-func handleFile(path, root string, info os.FileInfo, ignorePatterns []string, opts ScanOptions, signals *RepoSignals) error {
+func handleFile(path, root string, info os.DirEntry, ignorePatterns []string, opts ScanOptions, signals *RepoSignals) error {
 	relPath, err := filepath.Rel(root, path)
 	if err != nil {
 		return nil
@@ -38,7 +38,7 @@ func handleFile(path, root string, info os.FileInfo, ignorePatterns []string, op
 	}
 
 	// Always store to Files for existing check in engine
-	signals.Files[relPath] = true
+	signals.SetFile(relPath)
 	if opts.Debug {
 		opts.Logger.Println("  -> Added to Files map")
 	}
@@ -60,12 +60,17 @@ func handleFile(path, root string, info os.FileInfo, ignorePatterns []string, op
 		return nil
 	}
 
-	if info.Size() < 200_000 {
+	finfo, err := info.Info()
+	if err != nil {
+		return nil
+	}
+
+	if finfo.Size() < 200_000 {
 		// #nosec G304 - path is validated to be within root directory
 		data, err := os.ReadFile(path)
 		if err == nil && isText(string(data)) {
 			content := string(data)
-			signals.FileContent[relPath] = content
+			signals.SetContent(relPath, content)
 			if opts.Debug {
 				opts.Logger.Println("  -> Added to FileContent")
 			}

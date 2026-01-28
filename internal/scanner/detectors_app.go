@@ -8,7 +8,7 @@ import (
 
 // detectArtifactVersioning checks for versioned artifact patterns
 func detectArtifactVersioning(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["versioned_artifacts"] {
+	if signals.GetBool("versioned_artifacts") {
 		return
 	}
 
@@ -28,7 +28,7 @@ func detectArtifactVersioning(content, relPath string, signals *RepoSignals) {
 
 	for _, pattern := range versioningPatterns {
 		if strings.Contains(contentLower, pattern) {
-			signals.BoolSignals["versioned_artifacts"] = true
+			signals.SetBool("versioned_artifacts", true)
 			return
 		}
 	}
@@ -39,24 +39,24 @@ func detectHealthEndpoints(content, relPath string, signals *RepoSignals) {
 	contentLower := strings.ToLower(content)
 
 	// Detect /health endpoint
-	if signals.StringSignals["http_endpoint"] == "" {
+	if signals.GetString("http_endpoint") == "" {
 		healthPatterns := patterns.HealthPatterns
 
 		for _, pattern := range healthPatterns {
 			if strings.Contains(contentLower, pattern) {
-				signals.StringSignals["http_endpoint"] = "/health"
+				signals.SetString("http_endpoint", "/health")
 				break
 			}
 		}
 	}
 
 	// Detect /ready or /readiness endpoint
-	if signals.StringSignals["http_endpoint"] == "" {
+	if signals.GetString("http_endpoint") == "" {
 		readyPatterns := patterns.ReadyPatterns
 
 		for _, pattern := range readyPatterns {
 			if strings.Contains(contentLower, pattern) {
-				signals.StringSignals["http_endpoint"] = "/ready"
+				signals.SetString("http_endpoint", "/ready")
 				break
 			}
 		}
@@ -65,7 +65,7 @@ func detectHealthEndpoints(content, relPath string, signals *RepoSignals) {
 
 // detectCorrelationID checks for correlation/trace ID usage
 func detectCorrelationID(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["correlation_id_detected"] {
+	if signals.GetBool("correlation_id_detected") {
 		return
 	}
 
@@ -75,7 +75,7 @@ func detectCorrelationID(content, relPath string, signals *RepoSignals) {
 
 	for _, pattern := range correlationPatterns {
 		if strings.Contains(contentLower, pattern) {
-			signals.BoolSignals["correlation_id_detected"] = true
+			signals.SetBool("correlation_id_detected", true)
 			return
 		}
 	}
@@ -83,7 +83,7 @@ func detectCorrelationID(content, relPath string, signals *RepoSignals) {
 
 // detectStructuredLogging checks for structured logging libraries and patterns
 func detectStructuredLogging(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["structured_logging_detected"] {
+	if signals.GetBool("structured_logging_detected") {
 		return
 	}
 
@@ -98,7 +98,7 @@ func detectStructuredLogging(content, relPath string, signals *RepoSignals) {
 			// Need at least 2 matches to be confident it's structured logging
 			// (to avoid false positives from just having "log.info")
 			if matchCount >= 2 {
-				signals.BoolSignals["structured_logging_detected"] = true
+				signals.SetBool("structured_logging_detected", true)
 				return
 			}
 		}
@@ -109,7 +109,7 @@ func detectStructuredLogging(content, relPath string, signals *RepoSignals) {
 
 	for _, pattern := range strongIndicators {
 		if strings.Contains(contentLower, pattern) {
-			signals.BoolSignals["structured_logging_detected"] = true
+			signals.SetBool("structured_logging_detected", true)
 			return
 		}
 	}

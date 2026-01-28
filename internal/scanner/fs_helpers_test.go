@@ -121,9 +121,19 @@ func TestHandleFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			path := filepath.Join(tmpDir, tt.fileName)
-			info, err := os.Stat(path)
+			entries, err := os.ReadDir(tmpDir)
 			if err != nil {
 				t.Fatal(err)
+			}
+			var info os.DirEntry
+			for _, e := range entries {
+				if e.Name() == tt.fileName {
+					info = e
+					break
+				}
+			}
+			if info == nil {
+				t.Fatalf("file %s not found in %s", tt.fileName, tmpDir)
 			}
 
 			signals := &RepoSignals{

@@ -13,7 +13,7 @@ import (
 )
 
 // ConditionFunc evaluates a condition
-type ConditionFunc func(value interface{}, signals scanner.RepoSignals) bool
+type ConditionFunc func(value interface{}, signals *scanner.RepoSignals) bool
 
 // ConditionRegistry holds all registered condition functions
 var ConditionRegistry = map[string]ConditionFunc{}
@@ -21,18 +21,19 @@ var ConditionRegistry = map[string]ConditionFunc{}
 func init() {
 	// ===== Built-in evaluators =====
 
-	ConditionRegistry["file_exists"] = func(value interface{}, signals scanner.RepoSignals) bool {
+	ConditionRegistry["file_exists"] = func(value interface{}, signals *scanner.RepoSignals) bool {
 		pattern := value.(string)
 
 		// 1️⃣ basename exact match
-		for full := range signals.Files {
+		files := signals.GetFiles()
+		for full := range files {
 			if filepath.Base(full) == pattern {
 				return true
 			}
 		}
 
 		// 2️⃣ glob match using doublestar across full repo paths
-		for full := range signals.Files {
+		for full := range files {
 			match, err := doublestar.Match(pattern, full)
 			if err != nil {
 				continue
@@ -44,9 +45,9 @@ func init() {
 		return false
 	}
 
-	ConditionRegistry["code_contains"] = func(value interface{}, signals scanner.RepoSignals) bool {
+	ConditionRegistry["code_contains"] = func(value interface{}, signals *scanner.RepoSignals) bool {
 		needle := value.(string)
-		for _, content := range signals.FileContent {
+		for _, content := range signals.GetFileContentMap() {
 			if strings.Contains(content, needle) {
 				return true
 			}
@@ -54,22 +55,22 @@ func init() {
 		return false
 	}
 
-	ConditionRegistry["signal_equals"] = func(value interface{}, signals scanner.RepoSignals) bool {
+	ConditionRegistry["signal_equals"] = func(value interface{}, signals *scanner.RepoSignals) bool {
 		params := value.(map[string]interface{})
 		for key, expected := range params {
 
 			// bool signal
-			if actual, ok := signals.BoolSignals[key]; ok {
+			if actual, ok := signals.GetBoolSignal(key); ok {
 				return actual == expected
 			}
 
 			// string signal
-			if actual, ok := signals.StringSignals[key]; ok {
+			if actual, ok := signals.GetStringSignal(key); ok {
 				return actual == expected
 			}
 
 			// int signal
-			if actual, ok := signals.IntSignals[key]; ok {
+			if actual, ok := signals.GetIntSignal(key); ok {
 				return actual == expected
 			}
 
@@ -78,7 +79,6 @@ func init() {
 				// If expecting false and signal doesn't exist, that's a match
 				return !expectedBool
 			}
-
 		}
 		return false
 	}
@@ -89,7 +89,7 @@ func RegisterCondition(name string, fn ConditionFunc) {
 }
 
 // ===== Condition Evaluation Core =====
-func evaluateCondition(raw interface{}, signals scanner.RepoSignals) bool {
+func evaluateCondition(raw interface{}, signals *scanner.RepoSignals) bool {
 	switch cond := raw.(type) {
 	case map[string]interface{}:
 		for key, val := range cond {
@@ -105,7 +105,7 @@ func evaluateCondition(raw interface{}, signals scanner.RepoSignals) bool {
 
 // ===== Rule Execution =====
 
-func Evaluate(ruleSet []rules.Rule, signals scanner.RepoSignals) []Finding {
+func Evaluate(ruleSet []rules.Rule, signals *scanner.RepoSignals) []Finding {
 	var findings []Finding
 	// Use 'i' to avoid copying the 200-byte Rule struct into a local variable
 	for i := range ruleSet {
@@ -118,7 +118,7 @@ func Evaluate(ruleSet []rules.Rule, signals scanner.RepoSignals) []Finding {
 	return findings
 }
 
-func evaluateRule(rule *rules.Rule, signals scanner.RepoSignals) bool {
+func evaluateRule(rule *rules.Rule, signals *scanner.RepoSignals) bool {
 	// Evaluate all three condition groups independently
 	noneOfPassed := evaluateNoneOf(rule.Detect.NoneOf, signals)
 	allOfPassed := evaluateAllOf(rule.Detect.AllOf, signals)
@@ -132,7 +132,7 @@ func evaluateRule(rule *rules.Rule, signals scanner.RepoSignals) bool {
 }
 
 // evaluateNoneOf returns true if NONE of the conditions match
-func evaluateNoneOf(conditions []map[string]interface{}, signals scanner.RepoSignals) bool {
+func evaluateNoneOf(conditions []map[string]interface{}, signals *scanner.RepoSignals) bool {
 	// If no conditions, treat as passing (vacuous truth)
 	if len(conditions) == 0 {
 		return true
@@ -147,7 +147,7 @@ func evaluateNoneOf(conditions []map[string]interface{}, signals scanner.RepoSig
 }
 
 // evaluateAllOf returns true if ALL conditions match
-func evaluateAllOf(conditions []map[string]interface{}, signals scanner.RepoSignals) bool {
+func evaluateAllOf(conditions []map[string]interface{}, signals *scanner.RepoSignals) bool {
 	// If no conditions, treat as passing (vacuous truth)
 	if len(conditions) == 0 {
 		return true
@@ -163,7 +163,7 @@ func evaluateAllOf(conditions []map[string]interface{}, signals scanner.RepoSign
 
 // evaluateAnyOf returns true if at least ONE condition matches
 // If no any_of conditions exist, returns true (vacuous truth)
-func evaluateAnyOf(conditions []map[string]interface{}, signals scanner.RepoSignals) bool {
+func evaluateAnyOf(conditions []map[string]interface{}, signals *scanner.RepoSignals) bool {
 	// If no conditions, treat as passing
 	if len(conditions) == 0 {
 		return true

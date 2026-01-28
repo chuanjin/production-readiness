@@ -54,9 +54,11 @@ services:
 	}
 
 	// Verify scanning worked
-	if len(signals.Files) == 0 {
+	if len(signals.GetFiles()) == 0 {
 		t.Fatal("No files were scanned")
 	}
+
+	// ... existing rules ...
 
 	// Step 2: Load rules (create minimal test rules)
 	testRules := []rules.Rule{
@@ -248,37 +250,37 @@ metadata:
 	}{
 		{
 			name:    "Has structured logging",
-			check:   func() bool { return signals.BoolSignals["structured_logging_detected"] },
+			check:   func() bool { return signals.GetBool("structured_logging_detected") },
 			message: "Should detect logrus",
 		},
 		{
 			name:    "Has correlation ID",
-			check:   func() bool { return signals.BoolSignals["correlation_id_detected"] },
+			check:   func() bool { return signals.GetBool("correlation_id_detected") },
 			message: "Should detect OpenTelemetry",
 		},
 		{
 			name:    "Has health probes",
-			check:   func() bool { return signals.BoolSignals["k8s_probe_defined"] },
+			check:   func() bool { return signals.GetBool("k8s_probe_defined") },
 			message: "Should detect Kubernetes probes",
 		},
 		{
 			name:    "Has versioned artifacts",
-			check:   func() bool { return signals.BoolSignals["versioned_artifacts"] },
+			check:   func() bool { return signals.GetBool("versioned_artifacts") },
 			message: "Should detect v1.2.3 tag",
 		},
 		{
 			name:    "Has secrets provider",
-			check:   func() bool { return signals.BoolSignals["secrets_provider_detected"] },
+			check:   func() bool { return signals.GetBool("secrets_provider_detected") },
 			message: "Should detect external-secrets",
 		},
 		{
 			name:    "Has multiple regions",
-			check:   func() bool { return signals.IntSignals["region_count"] >= 2 },
+			check:   func() bool { return signals.GetInt("region_count") >= 2 },
 			message: "Should detect 2 AWS regions",
 		},
 		{
 			name:    "Has rate limiting",
-			check:   func() bool { return signals.BoolSignals["ingress_rate_limit"] },
+			check:   func() bool { return signals.GetBool("ingress_rate_limit") },
 			message: "Should detect nginx rate limit",
 		},
 	}

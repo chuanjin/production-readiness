@@ -11,7 +11,7 @@ import (
 
 // detectK8sDeploymentStrategy checks Kubernetes deployment files for strategy
 func detectK8sDeploymentStrategy(content, relPath string, signals *RepoSignals) {
-	if signals.StringSignals["k8s_deployment_strategy"] != "" {
+	if signals.GetString("k8s_deployment_strategy") != "" {
 		return
 	}
 
@@ -34,7 +34,7 @@ func detectK8sDeploymentStrategy(content, relPath string, signals *RepoSignals) 
 	if spec, ok := doc["spec"].(map[string]interface{}); ok {
 		if strategy, ok := spec["strategy"].(map[string]interface{}); ok {
 			if strategyType, ok := strategy["type"].(string); ok {
-				signals.StringSignals["k8s_deployment_strategy"] = strategyType
+				signals.SetString("k8s_deployment_strategy", strategyType)
 			}
 		}
 	}
@@ -42,7 +42,7 @@ func detectK8sDeploymentStrategy(content, relPath string, signals *RepoSignals) 
 
 // detectK8sProbes checks for Kubernetes liveness/readiness probes
 func detectK8sProbes(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["k8s_probe_defined"] {
+	if signals.GetBool("k8s_probe_defined") {
 		return
 	}
 
@@ -92,11 +92,11 @@ func detectK8sProbes(content, relPath string, signals *RepoSignals) {
 		if c, ok := container.(map[string]interface{}); ok {
 			// Check for livenessProbe or readinessProbe
 			if _, hasLiveness := c["livenessProbe"]; hasLiveness {
-				signals.BoolSignals["k8s_probe_defined"] = true
+				signals.SetBool("k8s_probe_defined", true)
 				return
 			}
 			if _, hasReadiness := c["readinessProbe"]; hasReadiness {
-				signals.BoolSignals["k8s_probe_defined"] = true
+				signals.SetBool("k8s_probe_defined", true)
 				return
 			}
 		}
@@ -105,7 +105,7 @@ func detectK8sProbes(content, relPath string, signals *RepoSignals) {
 
 // detectIngressRateLimit checks for rate limiting in Kubernetes Ingress
 func detectIngressRateLimit(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["ingress_rate_limit"] {
+	if signals.GetBool("ingress_rate_limit") {
 		return
 	}
 
@@ -134,7 +134,7 @@ func detectIngressRateLimit(content, relPath string, signals *RepoSignals) {
 
 			for _, annotation := range rateLimitAnnotations {
 				if _, exists := annotations[annotation]; exists {
-					signals.BoolSignals["ingress_rate_limit"] = true
+					signals.SetBool("ingress_rate_limit", true)
 					return
 				}
 			}
@@ -142,7 +142,7 @@ func detectIngressRateLimit(content, relPath string, signals *RepoSignals) {
 			// Also check if Kong plugins annotation contains rate-limiting
 			if plugins, ok := annotations["konghq.com/plugins"].(string); ok {
 				if strings.Contains(strings.ToLower(plugins), "rate-limit") {
-					signals.BoolSignals["ingress_rate_limit"] = true
+					signals.SetBool("ingress_rate_limit", true)
 					return
 				}
 			}
@@ -152,7 +152,7 @@ func detectIngressRateLimit(content, relPath string, signals *RepoSignals) {
 
 // detectResourceLimits checks for Kubernetes resource limits configurations
 func detectResourceLimits(content, relPath string, signals *RepoSignals) {
-	if signals.BoolSignals["k8s_resource_limits_detected"] {
+	if signals.GetBool("k8s_resource_limits_detected") {
 		return
 	}
 
@@ -202,7 +202,7 @@ func detectResourceLimits(content, relPath string, signals *RepoSignals) {
 					_, hasCPU := limits["cpu"]
 					_, hasMemory := limits["memory"]
 					if hasCPU || hasMemory {
-						signals.BoolSignals["k8s_resource_limits_detected"] = true
+						signals.SetBool("k8s_resource_limits_detected", true)
 						return
 					}
 				}
