@@ -271,3 +271,33 @@ func checkYAMLForTimeout(obj interface{}) bool {
 	}
 	return false
 }
+
+// detectRetry checks for retry logic configurations
+func detectRetry(content, _ string, signals *RepoSignals) {
+	if signals.GetBool("retry_detected") {
+		return
+	}
+
+	contentLower := strings.ToLower(content)
+	for _, pattern := range patterns.RetryPatterns {
+		if strings.Contains(contentLower, pattern) {
+			signals.SetBool("retry_detected", true)
+			return
+		}
+	}
+}
+
+// detectCircuitBreaker checks for circuit breaker patterns
+func detectCircuitBreaker(content, _ string, signals *RepoSignals) {
+	if signals.GetBool("circuit_breaker_detected") {
+		return
+	}
+
+	contentLower := strings.ToLower(content)
+	for _, pattern := range patterns.CircuitBreakerPatterns {
+		if strings.Contains(contentLower, pattern) {
+			signals.SetBool("circuit_breaker_detected", true)
+			return
+		}
+	}
+}

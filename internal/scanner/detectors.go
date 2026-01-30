@@ -21,6 +21,8 @@ func init() {
 	registerDetector(detectSLOConfig)
 	registerDetector(detectErrorBudget)
 	registerDetector(detectTimeoutConfiguration)
+	registerDetector(detectRetry)
+	registerDetector(detectCircuitBreaker)
 
 	registerDetector(detectManualSteps)
 	registerDetector(detectMigrationTool)

@@ -1,0 +1,22 @@
+id: cascading-failures
+severity: high
+category: reliability
+title: Potential cascading failure risk detected
+
+description: >
+  No evidence of fault-tolerance patterns such as retries or circuit breakers
+  was found in the codebase.
+
+why_it_matters:
+  - Without retries, transient network failures or brief service outages cause immediate errors.
+  - Without circuit breakers, a slow or failing dependency can cause resources to hang, leading to cascading failures across the system.
+  - These patterns are essential for maintaining availability in distributed systems.
+
+detect:
+  none_of:
+    - signal_equals:
+        retry_detected: true
+    - signal_equals:
+        circuit_breaker_detected: true
+
+confidence: medium

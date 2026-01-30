@@ -546,3 +546,85 @@ func TestDetectTimeoutConfiguration(t *testing.T) {
 		})
 	}
 }
+
+func TestDetectRetry(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected bool
+	}{
+		{
+			name:     "Go retry-go",
+			content:  `retry.Do(func() error { return nil })`,
+			expected: true,
+		},
+		{
+			name:     "Python tenacity",
+			content:  `@retry(stop=stop_after_attempt(3))`,
+			expected: true,
+		},
+		{
+			name:     "Generic retry limit",
+			content:  `max_retries: 5`,
+			expected: true,
+		},
+		{
+			name:     "No retry",
+			content:  `fmt.Println("hello")`,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			signals := &RepoSignals{
+				BoolSignals: make(map[string]bool),
+			}
+			detectRetry(tt.content, "test.go", signals)
+			if signals.BoolSignals["retry_detected"] != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["retry_detected"])
+			}
+		})
+	}
+}
+
+func TestDetectCircuitBreaker(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected bool
+	}{
+		{
+			name:     "Go gobreaker",
+			content:  `cb := gobreaker.NewCircuitBreaker(st)`,
+			expected: true,
+		},
+		{
+			name:     "Java Resilience4j",
+			content:  `CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");`,
+			expected: true,
+		},
+		{
+			name:     "Generic circuit breaker",
+			content:  `enable_circuit_breaker: true`,
+			expected: true,
+		},
+		{
+			name:     "No circuit breaker",
+			content:  `func main() {}`,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			signals := &RepoSignals{
+				BoolSignals: make(map[string]bool),
+			}
+			detectCircuitBreaker(tt.content, "test.go", signals)
+			if signals.BoolSignals["circuit_breaker_detected"] != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["circuit_breaker_detected"])
+			}
+		})
+	}
+}

@@ -501,6 +501,52 @@ var TimeoutConfigKeys = []string{
 	"max_wait_time", "wait_timeout", "operation_timeout",
 }
 
+// RetryPatterns checks for retry logic configurations
+var RetryPatterns = []string{
+	// Go retry libraries
+	"avast/retry-go", "setoffy/go-retry", "retry.do", "retry.run",
+	"backoff.", "exponentialbackoff", "constantbackoff",
+
+	// Python retry libraries
+	"tenacity", "@retry", "retry(", "backoff.on_exception",
+
+	// Node.js retry libraries
+	"async-retry", "promise-retry", "backoff-promise",
+
+	// Java retry libraries
+	"resilience4j.retry", "spring-retry", "@retryable",
+
+	// .NET retry libraries
+	"polly", "retrypolicy",
+
+	// Generic retry patterns
+	"max_retries", "retry_count", "retry_limit", "backoff_factor",
+	"exponential_backoff", "retry_interval", "retry_delay",
+}
+
+// CircuitBreakerPatterns checks for circuit breaker patterns
+var CircuitBreakerPatterns = []string{
+	// Go circuit breaker libraries
+	"sony/gobreaker", "afex/hystrix-go", "circuitbreaker",
+	"gobreaker.newcircuitbreaker",
+
+	// Java circuit breaker libraries
+	"resilience4j.circuitbreaker", "hystrix", "netflix.hystrix",
+
+	// Python circuit breaker libraries
+	"pycircuitbreaker", "circuitbreaker",
+
+	// Node.js circuit breaker libraries
+	"opossum", "brakes",
+
+	// .NET circuit breaker libraries
+	"polly.circuitbreaker",
+
+	// Generic circuit breaker patterns
+	"circuit_breaker", "circuitbreaker", "cb_settings",
+	"failure_threshold", "reset_timeout", "half_open",
+}
+
 // DocFileKeywords for identifying documentation files
 var DocFileKeywords = []string{
 	"readme", "doc", "deploy", "setup", "install",
