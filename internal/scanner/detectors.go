@@ -28,6 +28,7 @@ func init() {
 	registerDetector(detectMigrationTool)
 	registerDetector(detectBackwardCompatibleMigration)
 	registerDetector(detectMigrationValidation)
+	registerDetector(detectGracefulShutdown)
 }
 
 const (

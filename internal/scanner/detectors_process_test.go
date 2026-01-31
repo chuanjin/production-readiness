@@ -201,3 +201,45 @@ func TestDetectMigrationValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestDetectGracefulShutdown(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected bool
+	}{
+		{
+			name:     "Go signal notify",
+			content:  `signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)`,
+			expected: true,
+		},
+		{
+			name:     "Node.js sigterm listener",
+			content:  `process.on('SIGTERM', () => { server.close() })`,
+			expected: true,
+		},
+		{
+			name:     "Spring graceful shutdown",
+			content:  `spring.lifecycle.timeout-per-shutdown-phase=20s`,
+			expected: true,
+		},
+		{
+			name:     "No signal handling",
+			content:  `func main() { fmt.Println("hello") }`,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			signals := &RepoSignals{
+				BoolSignals: make(map[string]bool),
+			}
+			detectGracefulShutdown(tt.content, "main.go", signals)
+
+			if signals.BoolSignals["graceful_shutdown_detected"] != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["graceful_shutdown_detected"])
+			}
+		})
+	}
+}

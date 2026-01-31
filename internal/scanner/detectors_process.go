@@ -132,3 +132,20 @@ func detectMigrationValidation(content, relPath string, signals *RepoSignals) {
 		}
 	}
 }
+
+// detectGracefulShutdown checks for graceful shutdown handling
+func detectGracefulShutdown(content, _ string, signals *RepoSignals) {
+	if signals.GetBool("graceful_shutdown_detected") {
+		return
+	}
+
+	contentLower := strings.ToLower(content)
+	gracefulShutdownPatterns := patterns.GracefulShutdownPatterns
+
+	for _, pattern := range gracefulShutdownPatterns {
+		if strings.Contains(contentLower, pattern) {
+			signals.SetBool("graceful_shutdown_detected", true)
+			return
+		}
+	}
+}

@@ -556,3 +556,35 @@ var DocFileKeywords = []string{
 var DocFileExtensions = []string{
 	".md", ".txt",
 }
+
+// GracefulShutdownPatterns checks for graceful shutdown handling
+var GracefulShutdownPatterns = []string{
+	// Go
+	"os/signal", "signal.notify", "sigterm", "sigint", "sigquit",
+	"chan os.signal", "context.withcancel", "gracefulstop", "gracefulshutdown",
+	"shutdown(ctx)", "waitforexit_signal",
+
+	// Node.js
+	"process.on('sigterm')", "process.on(\"sigterm\")",
+	"process.once('sigterm')", "process.once(\"sigterm\")",
+	"process.on('sigint')", "process.on(\"sigint\")",
+
+	// Python
+	"signal.signal(signal.sigterm", "signal.signal(signal.sigint",
+	"graceful_shutdown", "handle_sigterm",
+
+	// Java/Spring
+	"registershutdownhook", "pre-stop", "pre_stop",
+	"spring.lifecycle.timeout-per-shutdown-phase",
+
+	// .NET
+	"iapplicationlifetime", "hostapplicationlifetime",
+	"applicationstopping", "applicationshutdown",
+
+	// Web Servers
+	"server.shutdown", "http.server.shutdown",
+	"listenandserve", "context.withtimeout",
+
+	// Generic
+	"graceful shutdown", "graceful_shutdown", "termination signal",
+}

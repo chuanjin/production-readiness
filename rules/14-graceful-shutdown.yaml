@@ -1,0 +1,20 @@
+id: graceful-shutdown
+severity: medium
+category: reliability
+title: No graceful shutdown handling detected
+
+description: >
+  No evidence of graceful shutdown handling (e.g., SIGTERM/SIGINT signal handling)
+  was found in the codebase.
+
+why_it_matters:
+  - When a system terminates a process (e.g., during deployment or scaling), it sends a SIGTERM.
+  - If the application doesn't handle this signal, it may terminate abruptly, dropping in-flight requests.
+  - Graceful shutdown allows the application to finish active work, close database connections, and exit cleanly.
+
+detect:
+  none_of:
+    - signal_equals:
+        graceful_shutdown_detected: true
+
+confidence: medium
