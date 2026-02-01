@@ -157,3 +157,81 @@ func TestDetectRegions(t *testing.T) {
 		})
 	}
 }
+
+func TestDetectNonRootUser(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		relPath  string
+		expected bool
+	}{
+		{
+			name: "Non-root user detected",
+			content: `
+FROM golang:1.21
+RUN useradd -m myuser
+USER myuser
+ENTRYPOINT ["./app"]
+`,
+			relPath:  "Dockerfile",
+			expected: true,
+		},
+		{
+			name: "UID user detected",
+			content: `
+FROM alpine
+USER 1000
+`,
+			relPath:  "dockerfile",
+			expected: true,
+		},
+		{
+			name: "Explicit root user (root)",
+			content: `
+FROM ubuntu
+USER root
+`,
+			relPath:  "Dockerfile",
+			expected: false,
+		},
+		{
+			name: "Explicit root user (0)",
+			content: `
+FROM ubuntu
+USER 0
+`,
+			relPath:  "Dockerfile",
+			expected: false,
+		},
+		{
+			name: "No USER instruction",
+			content: `
+FROM node:18
+COPY . .
+`,
+			relPath:  "Dockerfile",
+			expected: false,
+		},
+		{
+			name: "Not a Dockerfile",
+			content: `
+USER myuser
+`,
+			relPath:  "readme.md",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			signals := &RepoSignals{
+				BoolSignals: make(map[string]bool),
+			}
+			detectNonRootUser(tt.content, tt.relPath, signals)
+
+			if signals.BoolSignals["non_root_user_detected"] != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["non_root_user_detected"])
+			}
+		})
+	}
+}

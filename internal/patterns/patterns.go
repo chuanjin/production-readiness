@@ -588,3 +588,8 @@ var GracefulShutdownPatterns = []string{
 	// Generic
 	"graceful shutdown", "graceful_shutdown", "termination signal",
 }
+
+// NonRootUserPatterns checks for non-root user configuration in Dockerfiles
+var NonRootUserPatterns = []string{
+	"user ", "user\t",
+}

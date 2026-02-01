@@ -1,0 +1,21 @@
+id: non-root-user
+severity: medium
+category: security
+title: Container likely running as root
+
+description: >
+  No non-root user configuration was detected in the Dockerfile.
+  Running containers as root is a security risk.
+
+why_it_matters:
+  - Containers running as root have elevated privileges on the host if they break out.
+  - Many security policies (like OpenShift or restricted Pod Security Standards) 
+    disallow running as root.
+  - Specifying a non-root user (e.g., `USER 1000`) is a core security best practice.
+
+detect:
+  none_of:
+    - signal_equals:
+        non_root_user_detected: true
+
+confidence: medium

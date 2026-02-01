@@ -6,6 +6,7 @@ func init() {
 	registerDetector(detectSecretsProvider)
 	registerDetector(detectInfrastructure)
 	registerDetector(detectRegions)
+	registerDetector(detectNonRootUser)
 
 	registerDetector(detectK8sDeploymentStrategy)
 	registerDetector(detectK8sProbes)

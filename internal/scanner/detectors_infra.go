@@ -65,3 +65,36 @@ func detectRegions(content, relPath string, signals *RepoSignals) {
 	// Update the global count based on the accumulated unique regions
 	signals.SetInt("region_count", signals.GetRegionCount())
 }
+
+// detectNonRootUser checks for non-root user configuration in Dockerfiles
+func detectNonRootUser(content, relPath string, signals *RepoSignals) {
+	if signals.GetBool("non_root_user_detected") {
+		return
+	}
+
+	// Only scan Dockerfiles
+	fileName := strings.ToLower(relPath)
+	if !strings.Contains(fileName, "dockerfile") {
+		return
+	}
+
+	contentLower := strings.ToLower(content)
+	nonRootUserPatterns := patterns.NonRootUserPatterns
+
+	for _, pattern := range nonRootUserPatterns {
+		if strings.Contains(contentLower, pattern) {
+			// Basic check: Ensure it's not USER root
+			lines := strings.Split(contentLower, "\n")
+			for _, line := range lines {
+				trimmedLine := strings.TrimSpace(line)
+				if strings.HasPrefix(trimmedLine, "user ") || strings.HasPrefix(trimmedLine, "user\t") {
+					parts := strings.Fields(trimmedLine)
+					if len(parts) >= 2 && parts[1] != "root" && parts[1] != "0" {
+						signals.SetBool("non_root_user_detected", true)
+						return
+					}
+				}
+			}
+		}
+	}
+}
