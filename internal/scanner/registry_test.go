@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"sync"
 	"testing"
 )
 
@@ -11,10 +12,13 @@ func TestRegistry(t *testing.T) {
 	}
 
 	// Test adding a custom detector and running it
+	var mu sync.Mutex
 	var called bool
 	var capturedContent, capturedPath string
 
 	mockDetector := func(content string, relPath string, signals *RepoSignals) {
+		mu.Lock()
+		defer mu.Unlock()
 		called = true
 		capturedContent = content
 		capturedPath = relPath
@@ -37,6 +41,8 @@ func TestRegistry(t *testing.T) {
 
 	runAllDetectors(testContent, testPath, signals)
 
+	mu.Lock()
+	defer mu.Unlock()
 	if !called {
 		t.Error("Expected mock detector to be called, but it wasn't")
 	}

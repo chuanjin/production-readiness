@@ -165,7 +165,7 @@ spec:
 			}
 			detectIngressRateLimit(tt.content, tt.relPath, signals)
 
-			if got := signals.BoolSignals["ingress_rate_limit"]; got != tt.expected {
+			if got := signals.GetBool("ingress_rate_limit"); got != tt.expected {
 				t.Errorf("detectIngressRateLimit() = %v, want %v", got, tt.expected)
 			}
 		})
@@ -185,7 +185,7 @@ metadata:
 `
 		detectIngressRateLimit(content, "ingress.yaml", signals)
 		// Should still be true, function returns early
-		if !signals.BoolSignals["ingress_rate_limit"] {
+		if !signals.GetBool("ingress_rate_limit") {
 			t.Error("expected signal to remain true")
 		}
 	})
@@ -250,8 +250,8 @@ spec:
 			}
 			detectK8sProbes(tt.content, "deployment.yaml", signals)
 
-			if signals.BoolSignals["k8s_probe_defined"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["k8s_probe_defined"])
+			if signals.GetBool("k8s_probe_defined") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("k8s_probe_defined"))
 			}
 		})
 	}
@@ -327,8 +327,8 @@ spec:
 			}
 			detectResourceLimits(tt.content, "deploy.yaml", signals)
 
-			if signals.BoolSignals["k8s_resource_limits_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["k8s_resource_limits_detected"])
+			if signals.GetBool("k8s_resource_limits_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("k8s_resource_limits_detected"))
 			}
 		})
 	}

@@ -69,7 +69,7 @@ Deployment instructions:
 			}
 			detectManualSteps(tt.content, tt.relPath, signals)
 
-			if got := signals.BoolSignals["manual_steps_documented"]; got != tt.expected {
+			if got := signals.GetBool("manual_steps_documented"); got != tt.expected {
 				t.Errorf("detectManualSteps() = %v, want %v", got, tt.expected)
 			}
 		})
@@ -111,8 +111,8 @@ func TestDetectMigrationTool(t *testing.T) {
 			}
 			detectMigrationTool(tt.content, "migration.go", signals)
 
-			if signals.BoolSignals["migration_tool_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["migration_tool_detected"])
+			if signals.GetBool("migration_tool_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("migration_tool_detected"))
 			}
 		})
 	}
@@ -153,8 +153,8 @@ func TestDetectBackwardCompatibleMigration(t *testing.T) {
 			}
 			detectBackwardCompatibleMigration(tt.content, "migration.sql", signals)
 
-			if signals.BoolSignals["backward_compatible_migration_hint"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["backward_compatible_migration_hint"])
+			if signals.GetBool("backward_compatible_migration_hint") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("backward_compatible_migration_hint"))
 			}
 		})
 	}
@@ -195,8 +195,8 @@ func TestDetectMigrationValidation(t *testing.T) {
 			}
 			detectMigrationValidation(tt.content, "test.sh", signals)
 
-			if signals.BoolSignals["migration_validation_step"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["migration_validation_step"])
+			if signals.GetBool("migration_validation_step") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("migration_validation_step"))
 			}
 		})
 	}
@@ -237,8 +237,8 @@ func TestDetectGracefulShutdown(t *testing.T) {
 			}
 			detectGracefulShutdown(tt.content, "main.go", signals)
 
-			if signals.BoolSignals["graceful_shutdown_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["graceful_shutdown_detected"])
+			if signals.GetBool("graceful_shutdown_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("graceful_shutdown_detected"))
 			}
 		})
 	}

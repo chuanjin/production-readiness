@@ -39,8 +39,8 @@ func TestDetectSecretsProvider(t *testing.T) {
 			}
 			detectSecretsProvider(tt.content, "test.go", signals)
 
-			if signals.BoolSignals["secrets_provider_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["secrets_provider_detected"])
+			if signals.GetBool("secrets_provider_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("secrets_provider_detected"))
 			}
 		})
 	}
@@ -81,8 +81,8 @@ func TestDetectInfrastructure(t *testing.T) {
 			}
 			detectInfrastructure(tt.content, "test.tf", signals)
 
-			if signals.BoolSignals["infra_as_code_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["infra_as_code_detected"])
+			if signals.GetBool("infra_as_code_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("infra_as_code_detected"))
 			}
 		})
 	}
@@ -98,20 +98,20 @@ func TestDetectRegions(t *testing.T) {
 
 		// First file: us-east-1
 		detectRegions(`region = "us-east-1"`, "file1.tf", signals)
-		if signals.IntSignals["region_count"] != 1 {
-			t.Errorf("expected 1 region, got %d", signals.IntSignals["region_count"])
+		if signals.GetInt("region_count") != 1 {
+			t.Errorf("expected 1 region, got %d", signals.GetInt("region_count"))
 		}
 
 		// Second file: eu-west-1 (should increment count)
 		detectRegions(`backup_region = "eu-west-1"`, "file2.tf", signals)
-		if signals.IntSignals["region_count"] != 2 {
-			t.Errorf("expected 2 regions, got %d", signals.IntSignals["region_count"])
+		if signals.GetInt("region_count") != 2 {
+			t.Errorf("expected 2 regions, got %d", signals.GetInt("region_count"))
 		}
 
 		// Third file: us-east-1 again (duplicate, should NOT increment)
 		detectRegions(`another_ref = "us-east-1"`, "file3.tf", signals)
-		if signals.IntSignals["region_count"] != 2 {
-			t.Errorf("expected 2 regions, got %d", signals.IntSignals["region_count"])
+		if signals.GetInt("region_count") != 2 {
+			t.Errorf("expected 2 regions, got %d", signals.GetInt("region_count"))
 		}
 	})
 
@@ -151,8 +151,8 @@ func TestDetectRegions(t *testing.T) {
 			}
 			detectRegions(tt.content, "test.tf", signals)
 
-			if signals.IntSignals["region_count"] != tt.expectedCount {
-				t.Errorf("expected %d regions, got %d", tt.expectedCount, signals.IntSignals["region_count"])
+			if signals.GetInt("region_count") != tt.expectedCount {
+				t.Errorf("expected %d regions, got %d", tt.expectedCount, signals.GetInt("region_count"))
 			}
 		})
 	}
@@ -229,8 +229,8 @@ USER myuser
 			}
 			detectNonRootUser(tt.content, tt.relPath, signals)
 
-			if signals.BoolSignals["non_root_user_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["non_root_user_detected"])
+			if signals.GetBool("non_root_user_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("non_root_user_detected"))
 			}
 		})
 	}

@@ -135,7 +135,7 @@ func TestScanRepo(t *testing.T) {
 	}
 
 	// Detectors should have run on scanned content
-	if got := signals.IntSignals["region_count"]; got != 1 {
+	if got := signals.GetInt("region_count"); got != 1 {
 		t.Fatalf("expected region_count to be 1, got %d", got)
 	}
 }

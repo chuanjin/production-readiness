@@ -39,8 +39,8 @@ func TestDetectVersionedArtifacts(t *testing.T) {
 			}
 			detectArtifactVersioning(tt.content, "deploy.yaml", signals)
 
-			if signals.BoolSignals["versioned_artifacts"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["versioned_artifacts"])
+			if signals.GetBool("versioned_artifacts") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("versioned_artifacts"))
 			}
 		})
 	}
@@ -76,8 +76,8 @@ func TestDetectHealthEndpoints(t *testing.T) {
 			}
 			detectHealthEndpoints(tt.content, "server.js", signals)
 
-			if signals.StringSignals["http_endpoint"] != tt.expectedEndpoint {
-				t.Errorf("expected %q, got %q", tt.expectedEndpoint, signals.StringSignals["http_endpoint"])
+			if signals.GetString("http_endpoint") != tt.expectedEndpoint {
+				t.Errorf("expected %q, got %q", tt.expectedEndpoint, signals.GetString("http_endpoint"))
 			}
 		})
 	}
@@ -118,8 +118,8 @@ func TestDetectCorrelationId(t *testing.T) {
 			}
 			detectCorrelationID(tt.content, "handler.go", signals)
 
-			if signals.BoolSignals["correlation_id_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["correlation_id_detected"])
+			if signals.GetBool("correlation_id_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("correlation_id_detected"))
 			}
 		})
 	}
@@ -160,8 +160,8 @@ func TestDetectStructuredLogging(t *testing.T) {
 			}
 			detectStructuredLogging(tt.content, "logger.go", signals)
 
-			if signals.BoolSignals["structured_logging_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["structured_logging_detected"])
+			if signals.GetBool("structured_logging_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("structured_logging_detected"))
 			}
 		})
 	}

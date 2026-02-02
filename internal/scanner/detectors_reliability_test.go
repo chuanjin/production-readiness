@@ -127,8 +127,8 @@ func TestDetectAPIGatewayRateLimit(t *testing.T) {
 			}
 			detectAPIGatewayRateLimit(tt.content, tt.path, signals)
 
-			if signals.BoolSignals["api_gateway_rate_limit"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["api_gateway_rate_limit"])
+			if signals.GetBool("api_gateway_rate_limit") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("api_gateway_rate_limit"))
 			}
 		})
 	}
@@ -140,7 +140,7 @@ func TestDetectAPIGatewayRateLimit(t *testing.T) {
 		}
 		detectAPIGatewayRateLimit("rate_limit: 200", "config.yaml", signals)
 		// Should still be true, function returns early
-		if !signals.BoolSignals["api_gateway_rate_limit"] {
+		if !signals.GetBool("api_gateway_rate_limit") {
 			t.Error("expected signal to remain true")
 		}
 	})
@@ -274,8 +274,8 @@ func TestDetectSLOConfig(t *testing.T) {
 			}
 			detectSLOConfig(tt.content, tt.path, signals)
 
-			if signals.BoolSignals["slo_config_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["slo_config_detected"])
+			if signals.GetBool("slo_config_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("slo_config_detected"))
 			}
 		})
 	}
@@ -287,7 +287,7 @@ func TestDetectSLOConfig(t *testing.T) {
 		}
 		detectSLOConfig("service level objective: 99.9%", "readme.md", signals)
 		// Should still be true, function returns early
-		if !signals.BoolSignals["slo_config_detected"] {
+		if !signals.GetBool("slo_config_detected") {
 			t.Error("expected signal to remain true")
 		}
 	})
@@ -341,8 +341,8 @@ func TestDetectErrorBudget(t *testing.T) {
 			}
 			detectErrorBudget(tt.content, tt.path, signals)
 
-			if signals.BoolSignals["error_budget_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["error_budget_detected"])
+			if signals.GetBool("error_budget_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("error_budget_detected"))
 			}
 		})
 	}
@@ -354,7 +354,7 @@ func TestDetectErrorBudget(t *testing.T) {
 		}
 		detectErrorBudget("error_budget: 0.1%", "config.yaml", signals)
 		// Should still be true, function returns early
-		if !signals.BoolSignals["error_budget_detected"] {
+		if !signals.GetBool("error_budget_detected") {
 			t.Error("expected signal to remain true")
 		}
 	})
@@ -540,8 +540,8 @@ func TestDetectTimeoutConfiguration(t *testing.T) {
 			}
 			detectTimeoutConfiguration(tt.content, tt.relPath, signals)
 
-			if signals.BoolSignals["timeout_configured"] != tt.expected {
-				t.Errorf("Expected timeout_configured=%v, got %v", tt.expected, signals.BoolSignals["timeout_configured"])
+			if signals.GetBool("timeout_configured") != tt.expected {
+				t.Errorf("Expected timeout_configured=%v, got %v", tt.expected, signals.GetBool("timeout_configured"))
 			}
 		})
 	}
@@ -581,8 +581,8 @@ func TestDetectRetry(t *testing.T) {
 				BoolSignals: make(map[string]bool),
 			}
 			detectRetry(tt.content, "test.go", signals)
-			if signals.BoolSignals["retry_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["retry_detected"])
+			if signals.GetBool("retry_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("retry_detected"))
 			}
 		})
 	}
@@ -622,8 +622,8 @@ func TestDetectCircuitBreaker(t *testing.T) {
 				BoolSignals: make(map[string]bool),
 			}
 			detectCircuitBreaker(tt.content, "test.go", signals)
-			if signals.BoolSignals["circuit_breaker_detected"] != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, signals.BoolSignals["circuit_breaker_detected"])
+			if signals.GetBool("circuit_breaker_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("circuit_breaker_detected"))
 			}
 		})
 	}
