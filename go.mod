@@ -3,7 +3,7 @@ module github.com/chuanjin/production-readiness
 go 1.25.5
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.9.2
+	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/sync v0.19.0
 	gopkg.in/yaml.v3 v3.0.1
