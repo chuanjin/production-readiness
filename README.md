@@ -270,6 +270,7 @@ You can extend it by:
 
 Documentation:
 
+- `docs/architecture.md` — system architecture and data flow
 - `docs/rules.md` — how to write rules
 - `docs/detectors.md` — how to add detectors
 - `docs/contributing.md` — contribution guide
