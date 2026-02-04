@@ -1,0 +1,22 @@
+id: unsafe-db-migration
+severity: high
+category: data
+title: Potentially unsafe database migration detected
+
+description: >
+  Migration scripts include destructive or high-risk operations.
+
+why_it_matters:
+  - Dropping or renaming columns can break running application code.
+  - Type changes and NOT NULL constraints can lock large tables under load.
+  - Destructive changes are difficult to roll back safely.
+
+detect:
+  any_of:
+    - signal_equals:
+        unsafe_migration_detected: true
+  none_of:
+    - signal_equals:
+        backward_compatible_migration_hint: true
+
+confidence: medium

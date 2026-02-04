@@ -285,6 +285,15 @@ var MigrationValidationPatterns = []string{
 	"backup before", "snapshot before", "dump before",
 }
 
+// UnsafeMigrationPatterns checks for destructive or risky migrations
+var UnsafeMigrationPatterns = []string{
+	"drop table", "drop column", "truncate table",
+	"rename column", "rename table",
+	"alter column", "alter type",
+	"set not null", "drop not null",
+	"remove column", "remove field",
+}
+
 // MutableTags (anti-pattern)
 var MutableTags = []string{":latest", ":main", ":master", ":dev", ":develop"}
 
