@@ -202,6 +202,48 @@ func TestDetectMigrationValidation(t *testing.T) {
 	}
 }
 
+func TestDetectUnsafeMigration(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected bool
+	}{
+		{
+			name:     "Drop table detected",
+			content:  `DROP TABLE users;`,
+			expected: true,
+		},
+		{
+			name:     "Rename column detected",
+			content:  `ALTER TABLE users RENAME COLUMN name TO full_name;`,
+			expected: true,
+		},
+		{
+			name:     "Alter column type detected",
+			content:  `ALTER TABLE users ALTER COLUMN age TYPE bigint;`,
+			expected: true,
+		},
+		{
+			name:     "Safe migration",
+			content:  `ALTER TABLE users ADD COLUMN email TEXT;`,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			signals := &RepoSignals{
+				BoolSignals: make(map[string]bool),
+			}
+			detectUnsafeMigration(tt.content, "migration.sql", signals)
+
+			if signals.GetBool("unsafe_migration_detected") != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, signals.GetBool("unsafe_migration_detected"))
+			}
+		})
+	}
+}
+
 func TestDetectGracefulShutdown(t *testing.T) {
 	tests := []struct {
 		name     string

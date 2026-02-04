@@ -133,6 +133,24 @@ func detectMigrationValidation(content, relPath string, signals *RepoSignals) {
 	}
 }
 
+// detectUnsafeMigration checks for destructive or risky migration steps
+func detectUnsafeMigration(content, relPath string, signals *RepoSignals) {
+	if signals.GetBool("unsafe_migration_detected") {
+		return
+	}
+
+	contentLower := strings.ToLower(content)
+
+	unsafePatterns := patterns.UnsafeMigrationPatterns
+
+	for _, pattern := range unsafePatterns {
+		if strings.Contains(contentLower, pattern) {
+			signals.SetBool("unsafe_migration_detected", true)
+			return
+		}
+	}
+}
+
 // detectGracefulShutdown checks for graceful shutdown handling
 func detectGracefulShutdown(content, _ string, signals *RepoSignals) {
 	if signals.GetBool("graceful_shutdown_detected") {
