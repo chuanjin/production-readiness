@@ -19,20 +19,20 @@ const (
 func Markdown(summary engine.Summary, findings []engine.Finding, signals *scanner.RepoSignals) string {
 	var b strings.Builder
 
-	b.WriteString("# Production Readiness Report\n\n")
-	b.WriteString(fmt.Sprintf("**Overall Score: %d / 100**\n\n", summary.Score))
-	b.WriteString(fmt.Sprintf("- ✅ Passed: %d rules\n", summary.Passed))
-	b.WriteString(fmt.Sprintf("- ❌ Triggered: %d rules\n", summary.Triggered))
-	b.WriteString(fmt.Sprintf("- 📊 Total: %d rules\n\n", summary.Total))
+	fmt.Fprintf(&b, "# Production Readiness Report\n\n")
+	fmt.Fprintf(&b, "**Overall Score: %d / 100**\n\n", summary.Score)
+	fmt.Fprintf(&b, "- ✅ Passed: %d rules\n", summary.Passed)
+	fmt.Fprintf(&b, "- ❌ Triggered: %d rules\n", summary.Triggered)
+	fmt.Fprintf(&b, "- 📊 Total: %d rules\n\n", summary.Total)
 
 	writeSection := func(title string, emoji string, findings []engine.Finding) {
 		if len(findings) == 0 {
 			return
 		}
-		b.WriteString(fmt.Sprintf("## %s %s\n\n", emoji, title))
+		fmt.Fprintf(&b, "## %s %s\n\n", emoji, title)
 		for i := range findings {
 			f := &findings[i]
-			b.WriteString(fmt.Sprintf("### %s\n\n", f.Rule.Title))
+			fmt.Fprintf(&b, "### %s\n\n", f.Rule.Title)
 			b.WriteString(f.Rule.Description + "\n\n")
 
 			if len(f.Rule.Why) > 0 {
@@ -90,7 +90,7 @@ func Markdown(summary engine.Summary, findings []engine.Finding, signals *scanne
 			if value {
 				status = "✅"
 			}
-			b.WriteString(fmt.Sprintf("| `%s` | %s |\n", key, status))
+			fmt.Fprintf(&b, "| `%s` | %s |\n", key, status)
 		}
 		b.WriteString("\n")
 	}
@@ -109,7 +109,7 @@ func Markdown(summary engine.Summary, findings []engine.Finding, signals *scanne
 
 		for _, key := range keys {
 			value := signals.StringSignals[key]
-			b.WriteString(fmt.Sprintf("| `%s` | `%s` |\n", key, value))
+			fmt.Fprintf(&b, "| `%s` | `%s` |\n", key, value)
 		}
 		b.WriteString("\n")
 	}
@@ -128,15 +128,15 @@ func Markdown(summary engine.Summary, findings []engine.Finding, signals *scanne
 
 		for _, key := range keys {
 			value := signals.IntSignals[key]
-			b.WriteString(fmt.Sprintf("| `%s` | %d |\n", key, value))
+			fmt.Fprintf(&b, "| `%s` | %d |\n", key, value)
 		}
 		b.WriteString("\n")
 	}
 
 	// File statistics
 	b.WriteString("### Repository Statistics\n\n")
-	b.WriteString(fmt.Sprintf("- **Files scanned:** %d\n", len(signals.Files)))
-	b.WriteString(fmt.Sprintf("- **Files with content:** %d\n\n", len(signals.FileContent)))
+	fmt.Fprintf(&b, "- **Files scanned:** %d\n", len(signals.Files))
+	fmt.Fprintf(&b, "- **Files with content:** %d\n\n", len(signals.FileContent))
 
 	return b.String()
 }
@@ -146,7 +146,7 @@ func MarkdownSummary(summary engine.Summary, findings []engine.Finding) string {
 	var b strings.Builder
 
 	b.WriteString("# Production Readiness Summary\n\n")
-	b.WriteString(fmt.Sprintf("**Score: %d / 100**\n\n", summary.Score))
+	fmt.Fprintf(&b, "**Score: %d / 100**\n\n", summary.Score)
 
 	// Count by severity
 	var highCount, mediumCount, lowCount int
@@ -168,13 +168,13 @@ func MarkdownSummary(summary engine.Summary, findings []engine.Finding) string {
 
 	b.WriteString("## Issues Found\n\n")
 	if highCount > 0 {
-		b.WriteString(fmt.Sprintf("- 🔴 **High:** %d issues\n", highCount))
+		fmt.Fprintf(&b, "- 🔴 **High:** %d issues\n", highCount)
 	}
 	if mediumCount > 0 {
-		b.WriteString(fmt.Sprintf("- 🟠 **Medium:** %d issues\n", mediumCount))
+		fmt.Fprintf(&b, "- 🟠 **Medium:** %d issues\n", mediumCount)
 	}
 	if lowCount > 0 {
-		b.WriteString(fmt.Sprintf("- 🟡 **Low:** %d issues\n", lowCount))
+		fmt.Fprintf(&b, "- 🟡 **Low:** %d issues\n", lowCount)
 	}
 	if highCount == 0 && mediumCount == 0 && lowCount == 0 {
 		b.WriteString("✅ No issues found!\n")
