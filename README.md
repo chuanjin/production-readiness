@@ -56,6 +56,10 @@ In real systems, this tool typically surfaces issues like:
 - Services with metrics but no request correlation, making incidents hard to debug
 - Rate limiting missing at the edge, leading to cascading failures
 - Secrets drifting into environment files “temporarily” and never leaving
+- Kubernetes workloads running without resource limits, risking node instability
+- Lack of graceful shutdown handling, leading to dropped requests during deploys
+- Missing SLO or Error Budget configurations for critical services
+- Missing or inconsistent timeout and retry configurations
 
 These are rarely flagged by linters or security scanners, but they are common causes of real production incidents.
 If you have ever said “we should have seen this coming”, this tool is meant to make those risks visible earlier.
@@ -174,10 +178,14 @@ pr scan ~/projects/my-microservice
 
 The tool:
 
-1. Scans the target repository
-2. Extracts production-readiness signals
-3. Evaluates them against a curated rule set
-4. Produces a report in Markdown or JSON
+1. **Scans**: Walk target repository files.
+2. **Extracts**: Multiple specialized detectors extract production-readiness signals:
+    - **Infrastructure Detector**: Scans IaC (Terraform, CloudFormation) and cloud provider patterns.
+    - **Kubernetes Detector**: Evaluates Deployments, Ingress, and resource configurations.
+    - **Reliability Detector**: Finds patterns for timeouts, retries, circuit breakers, and SLOs.
+    - **Process Detector**: Looks for manual steps in documentation and migration patterns.
+3. **Evaluates**: Correlates signals against a curated rule set.
+4. **Reports**: Produces a summary of risks and maturity indicators.
 
 For information about usage:
 
@@ -188,22 +196,26 @@ pr --help
 Example output:
 
 ```
-Overall Readiness Score: 68 / 100
+Overall Readiness Score: 62 / 100
 
 🔴 High Risk
 - No rollback strategy detected
 - Secrets likely managed via environment variables
+- Kubernetes workloads missing resource limits (CPU/Memory)
 
 🟠 Medium Risk
-- No rate limiting at ingress
-- Logging without correlation IDs
+- No rate limiting at ingress or API Gateway
+- Logging without correlation IDs (Trace/Request ID)
+- Missing Graceful Shutdown handling for SIGTERM
 
 🟡 Low Risk
-- No database migration safety signals
+- No database migration safety signals (expand-contract)
+- Service Level Objectives (SLO) not explicitly defined
 
 🟢 Good Signals
-- Health checks detected
+- Health checks and Readiness probes detected
 - Versioned deployment artifacts
+- Infrastructure-as-Code (Terraform) detected
 
 ```
 
@@ -284,14 +296,16 @@ Interpretation, workflow automation, and organizational policy are intentionally
 
 ### Short-term focus
 
-- Expand rule coverage for common failure modes
-- Improve report explanations with real incident patterns
-- Add more detectors for Terraform, Helm, and Kubernetes
+- Expand detector coverage for Helm and more varied Terraform providers
+- Improve report explanations with real incident patterns and "burn" stories
+- Add language-specific detectors for more frameworks (Go, Node.js, Python)
+- CI/CD integration guides (GitHub Actions, GitLab CI)
 
 ### Longer-term
 
 - Keep this tool read-only and explainable
 - Avoid turning it into a compliance or gatekeeping system
+- Plugin architecture for custom detectors
 - This project is meant to stay lightweight and opinionated.
 
 ## Star the project ⭐
