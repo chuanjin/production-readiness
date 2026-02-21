@@ -185,7 +185,7 @@ The tool:
     - **Reliability Detector**: Finds patterns for timeouts, retries, circuit breakers, and SLOs.
     - **Process Detector**: Looks for manual steps in documentation and migration patterns.
 3. **Evaluates**: Correlates signals against a curated rule set.
-4. **Reports**: Produces a summary of risks and maturity indicators.
+4. **Reports**: Produces a detailed Markdown report including risks, maturity indicators, and raw signals.
 
 For information about usage:
 
@@ -195,35 +195,133 @@ pr --help
 
 Example output:
 
+```markdown
+# Production Readiness Report
+
+**Overall Score: 5 / 100**
+
+- ✅ Passed: 9 rules
+- ❌ Triggered: 8 rules
+- 📊 Total: 17 rules
+
+## 🔴 High Risk
+
+### Secrets likely stored as environment variables
+
+Secrets appear to be handled via environment variables without a dedicated secrets management solution.
+
+
+**Why it matters:**
+- Environment variables are often logged, dumped, or exposed by mistake.
+- Rotating env-based secrets usually requires redeployments.
+- Access control and auditing are typically missing.
+
+### Potential cascading failure risk detected
+
+No evidence of fault-tolerance patterns such as retries or circuit breakers was found in the codebase.
+
+
+**Why it matters:**
+- Without retries, transient network failures or brief service outages cause immediate errors.
+- Without circuit breakers, a slow or failing dependency can cause resources to hang, leading to cascading failures across the system.
+- These patterns are essential for maintaining availability in distributed systems.
+
+## 🟠 Medium Risk
+
+### No explicit health check contract detected
+
+No clear health or readiness endpoint was detected.
+
+
+**Why it matters:**
+- Orchestrators cannot distinguish dead from slow systems.
+- Load balancers may route traffic to unhealthy instances.
+- Debugging incidents becomes guesswork.
+
+### Logging without structure or correlation id
+
+Logs appear unstructured or lack correlation identifiers.
+
+
+**Why it matters:**
+- Incident analysis requires reconstructing request timelines.
+- Plain text logs do not scale beyond trivial systems.
+- Missing correlation ids make distributed tracing impossible.
+
+### No rate limiting detected at ingress
+
+No evidence of rate limiting was found at the system boundary.
+
+
+**Why it matters:**
+- Most denial-of-service incidents come from valid traffic.
+- Rate limiting protects both infrastructure and downstream systems.
+- Absence increases blast radius of bugs and abuse.
+
+### No graceful shutdown handling detected
+
+No evidence of graceful shutdown handling (e.g., SIGTERM/SIGINT signal handling) was found in the codebase.
+
+
+**Why it matters:**
+- When a system terminates a process (e.g., during deployment or scaling), it sends a SIGTERM.
+- If the application doesn't handle this signal, it may terminate abruptly, dropping in-flight requests.
+- Graceful shutdown allows the application to finish active work, close database connections, and exit cleanly.
+
+### Container likely running as root
+
+No non-root user configuration was detected in the Dockerfile. Running containers as root is a security risk.
+
+
+**Why it matters:**
+- Containers running as root have elevated privileges on the host if they break out.
+- Many security policies (like OpenShift or restricted Pod Security Standards) disallow running as root.
+- Specifying a non-root user (e.g., `USER 1000`) is a core security best practice.
+
+## 🟡 Low Risk
+
+### No SLO or error budget definition detected
+
+No explicit service-level objectives or error budgets were found.
+
+
+**Why it matters:**
+- Without SLOs, reliability decisions are arbitrary.
+- Teams cannot balance feature velocity and stability.
+- Incidents lack a clear success/failure definition.
+
+---
+
+## 📊 Detected Signals
+
+These signals were detected during the repository scan:
+
+### Boolean Signals
+
+| Signal | Status |
+|--------|--------|
+| `backward_compatible_migration_hint` | ✅ |
+| `migration_validation_step` | ✅ |
+| `timeout_configured` | ✅ |
+| `versioned_artifacts` | ✅ |
+
+### Integer Signals
+
+| Signal | Value |
+|--------|-------|
+| `region_count` | 0 |
+
+### Repository Statistics
+
+- **Files scanned:** 75
+- **Files with content:** 29
 ```
-Overall Readiness Score: 62 / 100
 
-🔴 High Risk
-- No rollback strategy detected
-- Secrets likely managed via environment variables
-- Kubernetes workloads missing resource limits (CPU/Memory)
-
-🟠 Medium Risk
-- No rate limiting at ingress or API Gateway
-- Logging without correlation IDs (Trace/Request ID)
-- Missing Graceful Shutdown handling for SIGTERM
-
-🟡 Low Risk
-- No database migration safety signals (expand-contract)
-- Service Level Objectives (SLO) not explicitly defined
-
-🟢 Good Signals
-- Health checks and Readiness probes detected
-- Versioned deployment artifacts
-- Infrastructure-as-Code (Terraform) detected
-
-```
 
 Each finding includes:
 
-- what was detected
-- why it matters in real incidents
-- how teams usually get burned
+- **What was detected**: A clear title and context-specific description.
+- **Why it matters**: Bullet points explaining the real-world impact and how teams usually get burned in production.
 
 ### Rules
 
